@@ -1,0 +1,10 @@
+# Do not include secrets in the repo
+provisioning/secrets.yml
+
+# Remove other people's roles but not ours
+provisioning/roles/*
+!provisioning/roles/reload-nginx
+
+# Remove stuff
+.vagrant
+

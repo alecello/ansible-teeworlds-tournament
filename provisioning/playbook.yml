@@ -1,0 +1,211 @@
+---
+- hosts: all
+  become: true
+
+  vars:
+    cert_dir: "/etc/letsencrypt/live/{{ hostname }}"
+    http_dir: "/var/www/html"
+    acme_dir: "/var/www/html/acme"
+    root_dir: "/var/www/html/site"
+    dh_param_path: "/etc/nginx/dhparam-2048.pem"
+
+
+  vars_files: "secrets.yml"
+
+
+  pre_tasks:
+    - name: Create nginx HTTP directories
+      file:
+        name: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "755"
+      loop:
+        - "/etc/nginx"
+        - "/var/www"
+        - "/var/www/html"
+        - "{{ root_dir }}"
+        - "{{ acme_dir }}"
+        - "{{ acme_dir }}/.well-known"
+        - "{{ acme_dir }}/.well-known/acme-challenge"
+
+    - name: Stat of DH parameters
+      stat:
+        path: "{{ dh_param_path }}"
+      register: dh_parameters_stat
+    
+    - name: Generate DH parameters (if they don't exist)
+      command: "/usr/bin/openssl dhparam -out {{ dh_param_path }} 2048"
+      when: not dh_parameters_stat.stat.exists
+
+
+
+  roles:
+    - role: geerlingguy.nginx
+      become: true
+      nginx_sendfile: "on"
+      nginx_access_log: "off"
+      nginx_remove_default_vhost: true
+      nginx_upstreams:
+        - name: php-handler
+          servers:
+            {
+              "127.0.0.1:9000"
+            }
+      nginx_vhosts:
+        - listen: "[::]:80 ipv6only=off"
+          server_name: "{{ hostname }}"
+          filename: "acme.conf"
+          root: "{{ acme_dir }}"
+          extra_parameters: |
+            log_not_found on;
+            error_log /var/log/nginx/error.log debug;
+
+            location /.well-known/acme-challenge {
+              root {{ acme_dir }};
+            }
+
+            location / {
+              return 301 https://$server_name$request_uri;
+            }
+          state: present
+
+
+    - role: geerlingguy.php
+      become: true
+      php_enable_webserver: true  
+      php_webserver_daemon: "nginx"
+#      php_enablerepo: "remi-php73"   <== relevant for debian?
+      php_packages:
+        - php-common
+        - php-fpm
+        - php-opcache
+      php_disable_functions:
+        - exec
+        - passthru
+        - shell_exec
+        - system
+        - proc_open
+        - popen
+        - parse_ini_file
+        - show_source
+      php_enable_php_fpm: true
+      php_enable_apc: false
+      php_opcache_enable: "1"
+      php_max_execution_time: "30"
+      php_date_timezone: "Europe/Rome"
+      php_memory_limit: "128M"
+      php_upload_max_filesize: "100K"
+      php_post_max_size: "100K"
+      php_expose_php: "Off"
+      php_opcache_memory_consumption: "64"
+
+
+    - role: reload-nginx
+
+
+    - role: geerlingguy.certbot
+      become: true
+      certbot_auto_renew: true
+      certbot_auto_renew_hour: 3    # Should dodge both late-nigth people and early-morning people.
+      certbot_auto_renew_minute: 0
+      certbot_auto_renew_options: "--quiet --no-self-upgrade" # look up
+      certbot_create_if_missing: true
+      certbot_admin_email: "{{ admin_email }}"
+      certbot_certs:
+        - domains:
+            - "{{ hostname }}"
+      certbot_auto_renew_user: "root" # "{{ ansible_user | default(lookup('env', 'USER')) }}" <== I should probably change this to nginx or something
+      certbot_create_command: >-
+        {{ certbot_script }} certonly --webroot --noninteractive --agree-tos --staging
+        -w {{ acme_dir }}
+        --email {{ cert_item.email | default(certbot_admin_email) }}
+        -d {{ cert_item.domains | join(',') }}
+      certbot_create_standalone_stop_services: []
+
+
+    # We need to do this now because otherwise when we reload nginx during first install the server will fail because the certificate does not exist
+    - role: geerlingguy.nginx
+      become: true
+      nginx_sendfile: "on"
+      nginx_access_log: "off"
+      nginx_upstreams:
+        - name: php-handler
+          servers:
+            {
+              "127.0.0.1:9000"
+            }
+      nginx_vhosts:
+        - listen: "[::]:443 ssl http2 ipv6only=off default_server"
+          server_name: "{{ hostname }}"
+          index: "index.html"
+          root: "{{ root_dir }}"
+          filename: "site.conf"
+          state: present
+          extra_parameters: |
+            log_not_found on;
+            error_log /var/log/nginx/error.log info;
+            access_log /var/log/nginx/access.log;
+
+            ssl_certificate     {{ cert_dir ~ '/fullchain.pem' }};
+            ssl_certificate_key {{ cert_dir ~ '/privkey.pem' }};
+
+            ssl_session_timeout 1d;
+            ssl_session_cache shared:MozSSL:10m;
+            ssl_session_tickets off;
+
+            ssl_dhparam dhparam-2048.pem;
+
+            ssl_protocols TLSv1.2 TLSv1.3;
+
+            ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+            ssl_prefer_server_ciphers off;
+
+            add_header Strict-Transport-Security "max-age=63072000" always;
+
+            add_header Referrer-Policy "no-referrer" always;
+            add_header X-Content-Type-Options "nosniff" always;
+            add_header X-Download-Options "noopen" always;
+            add_header X-Frame-Options "SAMEORIGIN" always;
+            add_header X-Permitted-Cross-Domain-Policies "none" always;
+            add_header X-Robots-Tag "none" always;
+            add_header X-XSS-Protection "1; mode=block" always;
+            fastcgi_hide_header X-Powered-By;
+
+            location = /robots.txt {
+                allow all;
+                log_not_found off;
+                access_log off;
+            }
+
+
+
+  tasks:
+    - name: "Remove previous site files"
+      file:
+        state: "absent"
+        path: "{{ root_dir }}"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: "Copy site files to NGINX"
+      copy:
+          src: nginx-site-files
+          dest: "{{ http_dir }}"
+          owner: "root"
+          group: "root"
+          mode: 0755
+
+
+    - name: "Move copied folder to {{ root_dir }}"
+      command:
+        cmd: "mv {{ http_dir }}/nginx-site-files {{ root_dir }}"
+
+
+    - name: "Restart nginx"
+      service:
+        name: "nginx"
+        state: "restarted"
