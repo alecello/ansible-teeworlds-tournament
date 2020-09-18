@@ -1,0 +1,102 @@
+*
+{
+    margin: 0px;
+    padding: 0px;
+}
+
+body
+{
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    background-color: #DDDDDD;
+}
+
+div.container
+{
+    width: 100%;
+    height: calc(100% - 50px);
+
+    /* Grow horizontally, be responsive */
+    display: flex;
+}
+
+div.column
+{
+    background-color: white;
+
+    margin: 20px;
+    border-radius: 20px;
+
+    flex: 1;
+
+    box-shadow: 5px 5px 5px gray;
+}
+
+div.column.score
+{
+    flex: 3;
+}
+
+div.header
+{
+    display: table;
+
+    width: 100%;
+    height: 50px;
+
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+
+    background-color: lightgray;
+}
+
+div.header h2
+{
+    display: table-cell;
+
+    width: 100%;
+    height: 100%;
+
+    text-align: center;
+    vertical-align: middle;
+
+    color: white;
+
+    font-variant: small-caps;
+}
+
+header.site-header
+{
+    display: table;
+
+    background-color: black;
+    color: white;
+
+    width: 100%;
+    height: 50px;
+
+    font-variant: small-caps;
+}
+
+header h1
+{
+    display: table-cell;
+
+    width: 100%;
+    height: 100%;
+
+    text-align: center;
+    vertical-align: middle;
+}
+
+p,ul
+{
+    box-sizing: border-box;
+    width: 100%;
+
+    padding: 10px;
+    text-align: justify;
+}

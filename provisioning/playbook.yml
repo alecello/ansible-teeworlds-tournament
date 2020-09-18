@@ -189,7 +189,7 @@
                 access_log off;
             }
             
-            location / {
+            location ~ ^/$ {
                 rewrite ^ /index.php;
             }
             

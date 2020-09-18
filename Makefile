@@ -1,4 +1,4 @@
-default: vm
+all: vm
 
 # Reinstall the VM
 reinstall: clean vm
@@ -27,5 +27,12 @@ content:
 	# Bring up the machine if it is not already
 	vagrant up
 
-	# Run the content provisioner
+	# Run the content provisioner for content update
 	vagrant provision --provision-with content
+
+provision:
+	# Bring up the machine if it is not already
+	vagrant up
+
+	# Run all content provisioners
+	vagrant provision
