@@ -40,6 +40,11 @@ Vagrant.configure("2") do |config|
     ansible.verbose = "vv"
   end
 
+  config.vm.provision "content", type: "ansible" do |content|
+    content.playbook = "provisioning/playbook.yml"
+    content.tags = "content"
+  end
+
   # Setup the greeting message
   config.vm.post_up_message = <<-END
   TEST MESSAGE.

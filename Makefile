@@ -22,3 +22,10 @@ vm:
 
 	# Spin up the machine
 	vagrant up
+
+content:
+	# Bring up the machine if it is not already
+	vagrant up
+
+	# Run the content provisioner
+	vagrant provision --provision-with content
