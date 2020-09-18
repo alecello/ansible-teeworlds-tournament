@@ -35,8 +35,9 @@ Vagrant.configure("2") do |config|
   end
 
   # Ansible provisioning at first startup
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "provisioning/playbook.yml"
+  config.vm.provision "provision", type: "ansible" do |provision|
+    provision.playbook = "provisioning/playbook.yml"
+    provision.verbose = "vv"
   end
 
   config.vm.provision "content", type: "ansible" do |content|

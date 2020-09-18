@@ -128,7 +128,8 @@
             - "{{ hostname }}"
       certbot_auto_renew_user: "root" # "{{ ansible_user | default(lookup('env', 'USER')) }}" <== I should probably change this to nginx or something
       certbot_create_command: >-
-        {{ certbot_script }} certonly --webroot --noninteractive --agree-tos --staging
+        {{ certbot_script }} certonly --webroot --noninteractive --agree-tos
+        {% if use_test_cert | default(true) %}--staging{% endif %}
         -w {{ acme_dir }}
         --email {{ cert_item.email | default(certbot_admin_email) }}
         -d {{ cert_item.domains | join(',') }}
