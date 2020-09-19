@@ -52,6 +52,7 @@
 
   roles:
     - role: geerlingguy.nginx
+      tags: [ certbot ]
       become: true
       nginx_sendfile: "on"
       nginx_access_log: "off"
@@ -116,6 +117,7 @@
 
 
     - role: geerlingguy.certbot
+      tags: [ certbot ]
       become: true
       certbot_auto_renew: true
       certbot_auto_renew_hour: 3    # Should dodge both late-nigth people and early-morning people.
@@ -214,8 +216,8 @@
 
 
   tasks:
-    - name: "Remove previous site files"
-      tags: [ content ]
+    - name: Remove previous site files
+      tags: [ site ]
       file:
         state: "absent"
         path: "{{ root_dir }}"
@@ -224,8 +226,8 @@
         mode: 0755
 
 
-    - name: "Copy site files to NGINX"
-      tags: [ content ]
+    - name: Copy site files to NGINX
+      tags: [ site ]
       copy:
           src: nginx-site-files
           dest: "{{ http_dir }}"
@@ -234,14 +236,177 @@
           mode: 0755
 
 
-    - name: "Move copied folder to {{ root_dir }}"
-      tags: [ content ]
+    - name: Move copied folder to {{ root_dir }}
+      tags: [ site ]
       command:
         cmd: "mv {{ http_dir }}/nginx-site-files {{ root_dir }}"
 
 
-    - name: "Restart nginx"
-      tags: [ content ]
+    - name: Restart nginx
+      tags: [ site ]
       service:
         name: "nginx"
         state: "restarted"
+
+
+    - name: Locally clone Teeworlds from GitHub
+      tags: [ teeworlds ]
+      become: false
+      local_action:
+        module: "git"
+        dest: "files/teeworlds/teeworlds"
+        repo: "https://github.com/alecello/teeworlds"
+        version: "tournament"
+        clone: yes
+        depth: 1
+      register: teeworlds_clone
+
+
+    - name: Locally clone BAM into Teeworlds directory
+      tags: [ teeworlds ]
+      become: false
+      local_action:
+        module: "git"
+        dest: "files/teeworlds/teeworlds/bam"
+        repo: "https://github.com/matricks/bam"
+        version: "a23a89d580a0408ca330ab42857157e443ec9b6f"
+        clone: yes
+        depth: 1
+      register: bam_clone
+
+
+    - name: Stat the bam executable
+      tags: [ teeworlds ]
+      become: false
+      local_action:
+        module: "stat"
+        path: "files/teeworlds/teeworlds/bam/bam" # It looks like a joke honestly
+      register: bam_executable
+
+
+    - name: Stat the server executable
+      tags: [ teeworlds ]
+      become: false
+      local_action:
+        module: "stat"
+        path: "files/teeworlds/teeworlds/build/x86_64/release/teeworlds_srv"
+      register: teeworlds_executable
+
+
+    - name: Compile bam if required
+      tags: [ teeworlds ]
+      become: false
+      local_action:
+        module: "shell"
+        chdir: "files/teeworlds/teeworlds/bam"
+        cmd: "./make_unix.sh" 
+      when: not bam_executable.stat.exists or bam_clone.changed
+
+
+    - name: Compile teeworlds if required
+      tags: [ teeworlds ]
+      become: false
+      local_action:
+        module: "shell"
+        chdir: "files/teeworlds/teeworlds"
+        cmd: "./bam/bam config; ./bam/bam conf=release server"
+      when: not teeworlds_executable.stat.exists or teeworlds_clone.changed
+
+
+    - name: Create the teeworlds group
+      tags: [ teeworlds ]
+      group:
+        name: "teeworlds"
+        system: yes
+        state: "present"
+
+
+    - name: Create the teeworlds user
+      tags: [ teeworlds ]
+      user:
+        name: "teeworlds"
+        group: "teeworlds"
+        password: "!"
+        shell: "/usr/sbin/nologin"
+        system: yes
+        create_home: no
+        state: "present"
+
+
+    - name: Install Teeworlds systemd service
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/files/teeworlds-server.service"
+        dest: "/etc/systemd/system/teeworlds-server.service"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Reload systemd daemon
+      tags: [ teeworlds ]
+      command:
+        cmd: "systemctl daemon-reload"
+
+
+    - name: Stop the teeworlds service
+      tags: [ teeworlds ]
+      service:
+        name: "teeworlds-server"
+        state: "stopped"
+
+
+    - name: Create teeworlds directory on the remote host
+      tags: [ teeworlds ]
+      file:
+        path: "/opt/teeworlds"
+        state: "directory"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Copy teeworlds executable to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/teeworlds/build/x86_64/release/teeworlds_srv"
+        dest: "/opt/teeworlds/server"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Copy teeworlds configuration to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/files/autoexec.cfg"
+        dest: "/opt/teeworlds/autoexec.cfg"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+    - name: Create empty credentials file (if it does not exist)
+      tags: [ teeworlds ]
+      file:
+        path: "/opt/teeworlds/creds.txt"
+        owner: "teeworlds"
+        group: "teeworlds"
+        mode: 0755
+        state: "touch"
+
+
+    - name: Create empty kills file (if it does not exist)
+      tags: [ teeworlds ]
+      file:
+        path: "/opt/teeworlds/kills.log"
+        owner: "teeworlds"
+        group: "teeworlds"
+        mode: 0755
+        state: "touch"
+
+
+    - name: Start the teeworlds service
+      tags: [ teeworlds ]
+      service:
+        name: "teeworlds-server"
+        state: "started"

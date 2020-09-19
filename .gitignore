@@ -7,3 +7,6 @@ provisioning/roles/*
 
 # Remove stuff
 .vagrant
+
+# Don't include cloned teeworlds repository
+provisioning/files/teeworlds/teeworlds

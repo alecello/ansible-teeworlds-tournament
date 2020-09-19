@@ -1,0 +1,38 @@
+[Unit]
+Description=Teeworlds server
+
+# Assert required files are presente
+AssertPathExists=/opt/teeworlds/server
+AssertPathExists=/opt/teeworlds/autoexec.cfg
+AssertFileIsExecutable=/opt/teeworlds/server
+AssertFileNotEmpty=/opt/teeworlds/autoexec.cfg
+
+# Create dependency network
+Wants=network-online.target boot-complete.target
+After=network-online.target boot-complete.target
+
+[Service]
+Type=exec
+ExecStart=/opt/teeworlds/server
+
+# Run as teeworlds:teeworlds, prevent privilege escalation
+User=teeworlds
+Group=teeworlds
+NoNewPrivileges=true
+
+WorkingDirectory=/opt/teeworlds/
+
+# Sandboxing
+ProtectSystem=strict
+ReadWritePaths=/opt/teeworlds /tmp
+PrivateDevices=true
+ProtectKernelTunables=true
+
+# Restart the server except when stopped with systemctl
+Restart=always
+
+# Try to prevent the server from being OOM killed
+OOMScoreAdjust=-100
+
+# Terminate or restart the process by sending a SIGINT
+KillSignal=SIGINT

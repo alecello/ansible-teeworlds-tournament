@@ -34,16 +34,31 @@ Vagrant.configure("2") do |config|
     vb.cpus = 2
   end
 
-  # Ansible provisioning at first startup
+  # Complete ansible provisioning
   config.vm.provision "provision", type: "ansible" do |provision|
     provision.playbook = "provisioning/playbook.yml"
-    provision.verbose = "vv"
   end
 
-  config.vm.provision "content", type: "ansible" do |content|
-    content.playbook = "provisioning/playbook.yml"
-    content.tags = "content"
+  # Site provisioning
+  config.vm.provision "site", type: "ansible" do |site|
+    site.playbook = "provisioning/playbook.yml"
+    site.tags = "site"
   end
+
+  # Teeworlds provisioning
+  config.vm.provision "teeworlds", type: "ansible" do |teeworlds|
+    teeworlds.playbook = "provisioning/playbook.yml"
+    teeworlds.tags = "teeworlds"
+    teeworlds.verbose = "vv"
+  end
+
+  # Certbot provisioning
+  config.vm.provision "certbot", type: "ansible" do |certbot|
+    certbot.playbook = "provisioning/playbook.yml"
+    certbot.tags = "teeworlds"
+    certbot.verbose = "vv"
+  end
+
 
   # Setup the greeting message
   config.vm.post_up_message = <<-END

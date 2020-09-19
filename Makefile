@@ -23,16 +23,23 @@ vm:
 	# Spin up the machine
 	vagrant up
 
-content:
-	# Bring up the machine if it is not already
-	vagrant up
-
-	# Run the content provisioner for content update
-	vagrant provision --provision-with content
-
 provision:
 	# Bring up the machine if it is not already
 	vagrant up
 
 	# Run all content provisioners
 	vagrant provision
+
+site:
+	# Bring up the machine if it is not already
+	vagrant up
+
+	# Run the content provisioner for content update
+	vagrant provision --provision-with site
+
+teeworlds:
+	# Bring up the machine if it is not already
+	vagrant up
+
+	# Run the content provisioner for content update
+	vagrant provision --provision-with teeworlds
