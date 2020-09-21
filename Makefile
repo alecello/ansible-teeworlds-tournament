@@ -43,3 +43,10 @@ teeworlds:
 
 	# Run the content provisioner for content update
 	vagrant provision --provision-with teeworlds
+
+build:
+	# Bring up the machine if it is not already
+	vagrant up
+
+	# Run the content provisioner for teeworlds rebuild
+	vagrant provision --provision-with build

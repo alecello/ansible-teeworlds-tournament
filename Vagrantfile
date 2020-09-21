@@ -19,9 +19,10 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant", type: "rsync", disabled: true
 
   # Forward ports
-  config.vm.network "forwarded_port", guest: 443, host: 4430
-  config.vm.network "forwarded_port", guest: 80, host: 8080
-  config.vm.network "forwarded_port", guest: 8303, host: 8303
+  config.vm.network "forwarded_port", guest: 443,  host: 4430, protocol: "tcp"
+  config.vm.network "forwarded_port", guest: 80,   host: 8080, protocol: "tcp"
+  config.vm.network "forwarded_port", guest: 8303, host: 8303, protocol: "udp"
+  config.vm.network "forwarded_port", guest: 8303, host: 8303, protocol: "tcp"
 
   # Use VirtualBox
   config.vm.provider "virtualbox" do |vb|
@@ -59,6 +60,12 @@ Vagrant.configure("2") do |config|
     certbot.verbose = "vv"
   end
 
+  # Build provisioning
+  config.vm.provision "build", type: "ansible" do |build|
+    build.playbook = "provisioning/playbook.yml"
+    build.tags = "build"
+    build.verbose = "vv"
+  end
 
   # Setup the greeting message
   config.vm.post_up_message = <<-END

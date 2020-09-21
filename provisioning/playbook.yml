@@ -248,9 +248,15 @@
         name: "nginx"
         state: "restarted"
 
+    
+    - name: Force a rebuild
+      tags: [ never, build ]
+      set_fact:
+        force_rebuild: true
+
 
     - name: Locally clone Teeworlds from GitHub
-      tags: [ teeworlds ]
+      tags: [ teeworlds, build ]
       become: false
       local_action:
         module: "git"
@@ -263,7 +269,7 @@
 
 
     - name: Locally clone BAM into Teeworlds directory
-      tags: [ teeworlds ]
+      tags: [ teeworlds, build ]
       become: false
       local_action:
         module: "git"
@@ -276,7 +282,7 @@
 
 
     - name: Stat the bam executable
-      tags: [ teeworlds ]
+      tags: [ teeworlds, build ]
       become: false
       local_action:
         module: "stat"
@@ -285,7 +291,7 @@
 
 
     - name: Stat the server executable
-      tags: [ teeworlds ]
+      tags: [ teeworlds, build ]
       become: false
       local_action:
         module: "stat"
@@ -294,23 +300,23 @@
 
 
     - name: Compile bam if required
-      tags: [ teeworlds ]
+      tags: [ teeworlds, build ]
       become: false
       local_action:
         module: "shell"
         chdir: "files/teeworlds/teeworlds/bam"
         cmd: "./make_unix.sh" 
-      when: not bam_executable.stat.exists or bam_clone.changed
+      when: (not bam_executable.stat.exists or bam_clone.changed) or (force_rebuild | default(false))
 
 
     - name: Compile teeworlds if required
-      tags: [ teeworlds ]
+      tags: [ teeworlds, build ]
       become: false
       local_action:
         module: "shell"
         chdir: "files/teeworlds/teeworlds"
-        cmd: "./bam/bam config; ./bam/bam conf=release server"
-      when: not teeworlds_executable.stat.exists or teeworlds_clone.changed
+        cmd: "./bam/bam config; ./bam/bam conf=release server content"
+      when: (not teeworlds_executable.stat.exists or teeworlds_clone.changed) or (force_rebuild | default(false))
 
 
     - name: Create the teeworlds group
@@ -333,11 +339,21 @@
         state: "present"
 
 
-    - name: Install Teeworlds systemd service
+    - name: Install Teeworlds server service
       tags: [ teeworlds ]
       copy:
         src: "files/teeworlds/files/teeworlds-server.service"
         dest: "/etc/systemd/system/teeworlds-server.service"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Install Teeworlds database service
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/database/teeworlds-db.service"
+        dest: "/etc/systemd/system/teeworlds-db.service"
         owner: "root"
         group: "root"
         mode: 0755
@@ -356,6 +372,13 @@
         state: "stopped"
 
 
+    - name: Stop the database service
+      tags: [ teeworlds ]
+      service:
+        name: "teeworlds-db"
+        state: "stopped"
+
+
     - name: Create teeworlds directory on the remote host
       tags: [ teeworlds ]
       file:
@@ -366,11 +389,31 @@
         mode: 0755
 
 
+    - name: Create data directory on the remote host
+      tags: [ teeworlds ]
+      file:
+        path: "/opt/teeworlds/data"
+        state: "directory"
+        owner: "teeworlds"
+        group: "teeworlds"
+        mode: 0755
+
+
     - name: Copy teeworlds executable to remote host
       tags: [ teeworlds ]
       copy:
         src: "files/teeworlds/teeworlds/build/x86_64/release/teeworlds_srv"
         dest: "/opt/teeworlds/server"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Copy database script to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/database/database.py"
+        dest: "/opt/teeworlds/database.py"
         owner: "root"
         group: "root"
         mode: 0755
@@ -385,7 +428,38 @@
         group: "root"
         mode: 0755
 
-    - name: Create empty credentials file (if it does not exist)
+
+    - name: Copy storage configuration to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/files/storage.cfg"
+        dest: "/opt/teeworlds/data/storage.cfg"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Copy maps to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/teeworlds/build/x86_64/release/data/maps"
+        dest: "/opt/teeworlds/data/"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Copy map data to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/teeworlds/build/x86_64/release/data/mapres"
+        dest: "/opt/teeworlds/data/"
+        owner: "root"
+        group: "root"
+        mode: 0755
+
+
+    - name: Create credentials file (if it does not exist)
       tags: [ teeworlds ]
       file:
         path: "/opt/teeworlds/creds.txt"
@@ -395,7 +469,7 @@
         state: "touch"
 
 
-    - name: Create empty kills file (if it does not exist)
+    - name: Create kills file (if it does not exist)
       tags: [ teeworlds ]
       file:
         path: "/opt/teeworlds/kills.log"

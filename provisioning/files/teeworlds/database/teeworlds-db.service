@@ -1,20 +1,17 @@
 [Unit]
-Description=Teeworlds server
+Description=Teeworlds database
 
 # Assert required files are presente
-AssertPathExists=/opt/teeworlds/server
-AssertPathExists=/opt/teeworlds/storage.cfg
-AssertPathExists=/opt/teeworlds/data/autoexec.cfg
-AssertFileIsExecutable=/opt/teeworlds/server
+AssertPathExists=/opt/teeworlds/database.py
+AssertPathExists=/opt/teeworlds/kills.log
 
 # Create dependency network
 Wants=network-online.target boot-complete.target
-After=network-online.target boot-complete.target teeworlds-db.service
-Requires=teeworlds-db.service
+After=network-online.target boot-complete.target
 
 [Service]
 Type=exec
-ExecStart=/opt/teeworlds/server
+ExecStart=/usr/bin/python3 /opt/teeworlds/database.py
 
 # Run as teeworlds:teeworlds, prevent privilege escalation
 User=teeworlds
@@ -37,3 +34,6 @@ OOMScoreAdjust=-100
 
 # Terminate or restart the process by sending a SIGINT
 KillSignal=SIGINT
+
+[Install]
+RequiredBy=teeworlds-server.service
