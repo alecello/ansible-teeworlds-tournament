@@ -24,6 +24,7 @@ playerstable =  ''' CREATE TABLE IF NOT EXISTS players (
 
 killstable =    ''' CREATE TABLE IF NOT EXISTS kills (
                         id integer PRIMARY KEY CHECK(id >= 0),
+                        time integer NOT NULL CHECK(time > 0),
                         killer text NOT NULL CHECK(length(killer) == 15),
                         killed text NOT NULL CHECK(length(killed) == 15)
                         );
@@ -59,23 +60,24 @@ while(readl):
         index = count = 0
 
     for line in lines[index:]:
-        victim, killer = (l.replace('\n', '') for l in line.split(' '))
+        timestamp, victim, killer = (l.replace('\n', '') for l in line.split(' '))
 
         try:
-            cursor.execute(f'INSERT INTO kills (id, killer, killed) VALUES ({count}, "{killer}", "{victim}");')
+            cursor.execute(f'INSERT INTO kills (id, time, killer, killed) VALUES ({count}, "{timestamp}", "{killer}", "{victim}");')
             count += 1
         except sqlite3.IntegrityError as error:
             if(str(error).startswith('CHECK constraint failed')):
-                print(f'ERROR: Got invalid data from kills file: "{killer}" -> "{victim}"')
+                print(f'ERROR: Got invalid data from kills file: "{timestamp}: {killer}" -> "{victim}"')
             else:
                 raise error
 
         index += 1
 
-    database.commit
+    database.commit()
     log.seek(0)
 
-    lastl = lines[index - 1]
+    if(index > 0):
+        lastl = lines[index - 1]
     
     slept = 0
     size = os.path.getsize('kills.log')
@@ -84,5 +86,6 @@ while(readl):
         slept += 1
 
 database.commit()
+database.close()
 log.close()
 exit(0)

@@ -339,6 +339,40 @@
         state: "present"
 
 
+    - name: Create the teeworlds-db group
+      tags: [ teeworlds ]
+      group:
+        name: "teeworlds-db"
+        system: yes
+        state: "present"
+
+
+    - name: Create the teeworlds-db user
+      tags: [ teeworlds ]
+      user:
+        name: "teeworlds-db"
+        group: "teeworlds-db"
+        password: "!"
+        shell: "/usr/sbin/nologin"
+        system: yes
+        create_home: no
+        state: "present"
+
+
+    - name: Add user www-data to group teeworlds-db
+      tags: [ teeworlds ]
+      user:
+        name: "www-data"
+        groups: "teeworlds-db"
+
+
+    - name: Add user teeworlds to group teeworlds-db
+      tags: [ teeworlds ]
+      user:
+        name: "teeworlds"
+        groups: "teeworlds-db"
+
+
     - name: Install Teeworlds server service
       tags: [ teeworlds ]
       copy:
@@ -346,7 +380,7 @@
         dest: "/etc/systemd/system/teeworlds-server.service"
         owner: "root"
         group: "root"
-        mode: 0755
+        mode: 0644
 
 
     - name: Install Teeworlds database service
@@ -356,7 +390,7 @@
         dest: "/etc/systemd/system/teeworlds-db.service"
         owner: "root"
         group: "root"
-        mode: 0755
+        mode: 0644
 
 
     - name: Reload systemd daemon
@@ -396,7 +430,7 @@
         state: "directory"
         owner: "teeworlds"
         group: "teeworlds"
-        mode: 0755
+        mode: 0700
 
 
     - name: Copy teeworlds executable to remote host
@@ -406,7 +440,7 @@
         dest: "/opt/teeworlds/server"
         owner: "root"
         group: "root"
-        mode: 0755
+        mode: 0555
 
 
     - name: Copy database script to remote host
@@ -416,27 +450,27 @@
         dest: "/opt/teeworlds/database.py"
         owner: "root"
         group: "root"
-        mode: 0755
+        mode: 0555
 
 
     - name: Copy teeworlds configuration to remote host
       tags: [ teeworlds ]
       copy:
         src: "files/teeworlds/files/autoexec.cfg"
-        dest: "/opt/teeworlds/autoexec.cfg"
-        owner: "root"
-        group: "root"
-        mode: 0755
+        dest: "/opt/teeworlds/data/autoexec.cfg"
+        owner: "teeworlds"
+        group: "teeworlds"
+        mode: 0400
 
 
     - name: Copy storage configuration to remote host
       tags: [ teeworlds ]
       copy:
         src: "files/teeworlds/files/storage.cfg"
-        dest: "/opt/teeworlds/data/storage.cfg"
-        owner: "root"
-        group: "root"
-        mode: 0755
+        dest: "/opt/teeworlds/storage.cfg"
+        owner: "teeworlds"
+        group: "teeworlds"
+        mode: 0400
 
 
     - name: Copy maps to remote host
@@ -444,19 +478,17 @@
       copy:
         src: "files/teeworlds/teeworlds/build/x86_64/release/data/maps"
         dest: "/opt/teeworlds/data/"
-        owner: "root"
-        group: "root"
-        mode: 0755
-
+        owner: "teeworlds"
+        group: "teeworlds"
+  
 
     - name: Copy map data to remote host
       tags: [ teeworlds ]
       copy:
         src: "files/teeworlds/teeworlds/build/x86_64/release/data/mapres"
         dest: "/opt/teeworlds/data/"
-        owner: "root"
-        group: "root"
-        mode: 0755
+        owner: "teeworlds"
+        group: "teeworlds"
 
 
     - name: Create credentials file (if it does not exist)
@@ -465,7 +497,17 @@
         path: "/opt/teeworlds/creds.txt"
         owner: "teeworlds"
         group: "teeworlds"
-        mode: 0755
+        mode: 0400
+        state: "touch"
+
+
+    - name: Create administators file (if it does not exist)
+      tags: [ teeworlds ]
+      file:
+        path: "/opt/teeworlds/admin.txt"
+        owner: "teeworlds"
+        group: "teeworlds"
+        mode: 0400
         state: "touch"
 
 
@@ -475,8 +517,26 @@
         path: "/opt/teeworlds/kills.log"
         owner: "teeworlds"
         group: "teeworlds"
-        mode: 0755
+        mode: 0600
         state: "touch"
+
+    
+    - name: Create empty database (if it does not exist)
+      tags: [ teeworlds, db ]
+      shell:
+        cmd: "sqlite3 database 'VACUUM;'"
+        chdir: "/opt/teeworlds/data"
+        creates: "/opt/teeworlds/data/database"
+
+
+    - name: Set permissions for the database file
+      tags: [ teeworlds, db ]
+      file:
+        path: "/opt/teeworlds/data/database"
+        owner: "teeworlds-db"
+        group: "teeworlds-db"
+        mode: 0660
+        state: "file"
 
 
     - name: Start the teeworlds service
