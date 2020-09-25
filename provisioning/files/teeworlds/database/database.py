@@ -18,7 +18,8 @@ signal.signal(signal.SIGHUP, handler)
 
 playerstable =  ''' CREATE TABLE IF NOT EXISTS players (
                         password text PRIMARY KEY CHECK(length(password) == 15),
-                        name text NOT NULL CHECK(length(name) <= 15)
+                        name text NOT NULL CHECK(length(name) <= 15),
+                        email text
                     );
                 '''
 

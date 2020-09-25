@@ -476,7 +476,7 @@
     - name: Copy maps to remote host
       tags: [ teeworlds ]
       copy:
-        src: "files/teeworlds/teeworlds/build/x86_64/release/data/maps"
+        src: "files/teeworlds/maps"
         dest: "/opt/teeworlds/data/"
         owner: "teeworlds"
         group: "teeworlds"
