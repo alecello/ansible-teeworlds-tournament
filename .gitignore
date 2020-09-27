@@ -17,3 +17,6 @@ provisioning/files/teeworlds/teeworlds
 provisioning/files/teeworlds/database/data/database
 provisioning/files/teeworlds/database/data/database-journal
 provisioning/files/teeworlds/database/kills.log
+
+# Exclude testing file, will be created by Ansible
+provisioning/files/nginx-site-files/config.php
