@@ -88,6 +88,10 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 				$stmt->close();
 			}
 		}
+
+		// Release the lock
+		$db->close();
+		$db = NULL;
 	}
 }
 ?>
@@ -132,19 +136,112 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 			<tr>
 				<th scope="col">🏆</th>
 				<th scope="col">Nome</th>
-				<th scope="col">Kills</th>
+				<th scope="col">Kills (uniche)</th>
 				<th scope="col">Deaths</th>
 			</tr>
 			</thead>
 			<tbody>
-			<tr>
-				<th>1</th>
-				<td>ASd</td>
-				<td>123</td>
-				<td>456</td>
-			</tr>
+			<?php
+			if(file_exists('classifica.html')) {
+				$lastUpdate = filemtime('classifica.html');
+			} else {
+				$lastUpdate = 0;
+			}
+			// Old file
+			if($lastUpdate + CLASSIFICA_UPDATE_SECONDS < time() && !file_exists('update_in_progress.lock')) {
+				touch('update_in_progress.lock');
+				$lastUpdate = time();
+				// Update it
+				$db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
+
+				// TODO: WHERE ... with a timetstamp to filter different turns
+				$stmt = $db->prepare("
+SELECT k.name AS killer, d.name AS killed
+FROM kills
+JOIN players AS k ON killer = k.password
+JOIN players AS d ON killed = d.password
+;");
+				$result = $stmt->execute();
+				if($result === false) {
+					die("Error 3");
+				}
+
+				// TODO: can this cause a division by 0?
+				// Player => Points calculcated according to (K/D)*(unique_players_killed/total_players)
+				$players = [];
+
+				$killsCounter = [];
+				$deathsCounter = [];
+				$uniqueKills = [];
+
+				while(($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
+					$k = $row['killer'];
+					$d = $row['killed'];
+
+					// Initialize values if we never encountered this player
+					if(!isset($players[$k])) {
+						$players[$k] = 0;
+						$killsCounter[$k] = 0;
+						$deathsCounter[$k] = 0;
+						$uniqueKills[$k] = [];
+					}
+					if(!isset($players[$d])) {
+						$players[$d] = 0;
+						$killsCounter[$d] = 0;
+						$deathsCounter[$d] = 0;
+						$uniqueKills[$d] = [];
+					}
+
+					if($k === $d) {
+						// Special case
+						$deathsCounter[$d]++;
+					} else {
+						// +1 kill
+						$killsCounter[$k]++;
+						// +1 death
+						$deathsCounter[$d]++;
+						// Add to uniques
+						if(!isset($uniqueKills[$k][$d])) {
+							$uniqueKills[$k][$d] = 0;
+						}
+						// Can be counted if we want (how many times player X killed player Y)
+						// $uniqueKills[$k][$d]++;
+					}
+				}
+				foreach($players as $player => &$points) {
+					$points = ($killsCounter[$player] / $deathsCounter[$player]) * (count($uniqueKills[$player]) / count($players));
+				}
+
+				arsort($players);
+
+				$html = '';
+				$i = 1;
+				// It's sorted now
+				foreach($players as $player => &$points) {
+					$name = htmlspecialchars($player);
+					$unique = count($uniqueKills[$player]);
+					$html .= "
+<tr>
+	<th>$i</th>
+	<th>$player</th>
+	<td>${killsCounter[$player]} ($unique)</td>
+	<td>${deathsCounter[$player]}</td>
+</tr>";
+					$i++;
+				}
+
+				file_put_contents('classifica.html', $html);
+				$html = NULL;
+
+				unlink('update_in_progress.lock');
+			}
+
+			echo file_get_contents('classifica.html');
+			?>
 			</tbody>
 		</table>
+
+		<small>Ultimo aggiornamento: <?= date('Y-m-d H:i:s', $lastUpdate) ?></small>
 	</div>
 	<div class="tab-pane <?= $register ? 'show active' : '' ?>" id="registrati" role="tabpanel" aria-labelledby="registrati-tab">
 		<?php if($register && $registerError === NULL): ?>

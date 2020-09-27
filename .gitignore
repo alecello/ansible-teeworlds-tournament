@@ -20,3 +20,4 @@ provisioning/files/teeworlds/database/kills.log
 
 # Exclude testing file, will be created by Ansible
 provisioning/files/nginx-site-files/config.php
+provisioning/files/nginx-site-files/classifica.html
