@@ -8,6 +8,7 @@ provisioning/roles/*
 # Remove stuff
 .vagrant
 .vscode
+.idea/
 
 # Don't include cloned teeworlds repository
 provisioning/files/teeworlds/teeworlds
