@@ -117,11 +117,23 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 		<a class="nav-link <?= $register ? 'active' : '' ?>" id="registrati-tab" data-toggle="tab" href="#registrati" role="tab" aria-controls="registrati" aria-selected="<?= $register ? 'true' : 'false' ?>">Registrati</a>
 	</li>
 </ul>
-
+<?php
+$db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
+$iscritti = $db->query("SELECT COUNT(*) FROM players;");
+$iscritti = $iscritti->fetchArray(SQLITE3_NUM);
+$db->close();
+$db = NULL;
+if($iscritti) {
+	$iscritti = $iscritti[0];
+} else {
+	$iscritti = NULL;
+}
+?>
 <div class="tab-content ml-3 mr-3" id="theTabs">
 	<div class="tab-pane <?= $register ? '' : 'show active' ?>" id="torneo" role="tabpanel" aria-labelledby="torneo-tab">
 		<h2>Il torneo</h2>
 		<p>Qui si torna e si ritorna.</p>
+		<?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
 		<p>Il torneo si terrà il giorno ... dalle ... alle ...</p>
 		<p>Si vince in base a ... e il premio è una pacca sulla spalla</p>
 		<p>Le regole sono:</p>
@@ -234,6 +246,9 @@ JOIN players AS d ON killed = d.password
 
 				file_put_contents('classifica.html', $html);
 				$html = NULL;
+
+				$db->close();
+				$db = NULL;
 
 				unlink('update_in_progress.lock');
 			}
