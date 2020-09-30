@@ -30,6 +30,8 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 		$registerError = 'L\'indirizzo email non può essere vuoto';
 	} else if($_POST['checkbox1'] !== 'on') {
 		$registerError = 'Non hai accettato le condizioni';
+	} else if(preg_match("#^[a-zA-Z0-9\-_ .,;:!?]+$#", $_POST['nome']) !== 1) {
+		$registerError = 'Il nome contiene caratteri non validi';
 	}
 	if($registerError === NULL) {
 		// Generate password
@@ -261,8 +263,8 @@ JOIN players AS d ON killed = d.password
 			<form action="#" method="post">
 				<div class="form-group">
 					<label for="registratiFormNome">Nome nel gioco</label>
-					<input name="nome" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" type="text" required="required" maxlength="16" class="form-control" id="registratiFormNome" aria-describedby="nomeHelp">
-					<small id="nomeHelp" class="form-text text-muted">Il nome visualizzato nel gioco, massimo 16 caratteri (?).</small>
+					<input name="nome" pattern="[a-zA-Z0-9\-_ .,;:!?]+" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" type="text" required="required" maxlength="15" class="form-control" id="registratiFormNome" aria-describedby="nomeHelp">
+					<small id="nomeHelp" class="form-text text-muted">Il nome visualizzato nel gioco, massimo 15 caratteri. Sono ammessi caratteri alfanumerici, spazio, trattino, underscore e alcuni segni di punteggiatura: .,;:!?</small>
 				</div>
 				<div class="form-group">
 					<label for="registratiFormEmail">Indirizzo email</label>
@@ -273,7 +275,7 @@ JOIN players AS d ON killed = d.password
 					<input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
 					<label class="form-check-label" for="registratiFormCheck1">Ho letto e accetto le condizioni generali e particolari e le cose della privacy e prometto di non barare.</label>
 				</div>
-				<button type="submit" class="btn btn-primary">Submit</button>
+				<button type="submit" class="btn btn-primary">Invia</button>
 			</form>
 		<?php endif; ?>
 	</div>
