@@ -167,7 +167,7 @@ JOIN players AS d ON killed = d.password
 				}
 
 				// TODO: can this cause a division by 0?
-				// Player => Points calculcated according to (K/D)*(unique_players_killed/total_players)
+				// Player => Points calculated according to (K/(D+1))*(unique_players_killed/total_players)
 				$players = [];
 
 				$killsCounter = [];
@@ -209,7 +209,7 @@ JOIN players AS d ON killed = d.password
 					}
 				}
 				foreach($players as $player => &$points) {
-					$points = ($killsCounter[$player] / $deathsCounter[$player]) * (count($uniqueKills[$player]) / count($players));
+					$points = ($killsCounter[$player] / ($deathsCounter[$player] + 1)) * (count($uniqueKills[$player]) / count($players));
 				}
 
 				arsort($players);
