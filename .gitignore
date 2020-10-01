@@ -10,8 +10,9 @@ provisioning/roles/*
 .vscode
 .idea/
 
-# Don't include cloned teeworlds repository
+# Don't include cloned repositories
 provisioning/files/teeworlds/teeworlds
+provisioning/files/phpmailer
 
 # Remove files from test runs of the database script
 provisioning/files/teeworlds/database/data/database

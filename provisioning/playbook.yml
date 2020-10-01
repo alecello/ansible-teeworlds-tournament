@@ -15,6 +15,7 @@
 
   pre_tasks:
     - name: Install required packages
+      tags: [ always ]
       apt:
         name:
           - "sqlite3"
@@ -216,6 +217,54 @@
 
 
   tasks:
+    - name: Force a rebuild
+      tags: [ never, build ]
+      set_fact:
+        force_rebuild: true
+
+
+    - name: Locally clone PHPMailer from GitHub
+      tags: [ site, build ]
+      become: false
+      local_action:
+        module: "git"
+        dest: "files/phpmailer"
+        repo: "https://github.com/PHPMailer/PHPMailer"
+        version: "v6.1.7"
+        clone: yes
+        depth: 1
+      register: phpmailer_clone
+
+
+    - name: Create PHPMailer directory
+      tags: [ site, build ]
+      file:
+        path: "/usr/share/php/PHPMailer"
+        owner: "root"
+        group: "root"
+        mode: 0755
+        state: "directory"
+
+
+    - name: Stat the PHPMailer directory
+      tags: [ site, build ]
+      become: false
+      stat:
+        path: "/usr/share/php/PHPMailer/src"
+      register: phpmailer_stat
+
+
+    - name: Copy PHPMailer to /usr/share/php/PHPMailer
+      tags: [ site, build ]
+      copy:
+        src: "phpmailer/src"
+        dest: "/usr/share/php/PHPMailer"
+        owner: "root"
+        group: "root"
+        mode: 0755
+      when: (not phpmailer_stat.stat.exists or phpmailer_clone.changed) or (force_rebuild | default(false))
+
+
     - name: Remove previous site files
       tags: [ site ]
       file:
@@ -242,17 +291,27 @@
         cmd: "mv {{ http_dir }}/nginx-site-files {{ root_dir }}"
 
 
+    - name: Stat config.php
+      tags: [ site ]
+      stat:
+        path: "{{ root_dir }}/config.php"
+      register: config_stat
+
+
+    - name: Copy example config.php
+      tags: [ site ]
+      copy:
+        remote_src: yes
+        src: "{{ root_dir }}/config-example.php"
+        dest: "{{ root_dir }}/config.php"
+      when: not config_stat.stat.exists
+
+
     - name: Restart nginx
       tags: [ site ]
       service:
         name: "nginx"
         state: "restarted"
-
-    
-    - name: Force a rebuild
-      tags: [ never, build ]
-      set_fact:
-        force_rebuild: true
 
 
     - name: Locally clone Teeworlds from GitHub
@@ -428,13 +487,13 @@
       file:
         path: "/opt/teeworlds/data"
         state: "directory"
-        owner: "teeworlds"
-        group: "teeworlds"
-        mode: 0700
+        owner: "teeworlds-db"
+        group: "teeworlds-db"
+        mode: 0775
 
 
     - name: Copy teeworlds executable to remote host
-      tags: [ teeworlds ]
+      tags: [ teeworlds, build ]
       copy:
         src: "files/teeworlds/teeworlds/build/x86_64/release/teeworlds_srv"
         dest: "/opt/teeworlds/server"

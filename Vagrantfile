@@ -41,30 +41,37 @@ Vagrant.configure("2") do |config|
   end
 
   # Site provisioning
-  config.vm.provision "site", type: "ansible" do |site|
+  config.vm.provision "site", type: "ansible", run: "never" do |site|
     site.playbook = "provisioning/playbook.yml"
     site.tags = "site"
   end
 
   # Teeworlds provisioning
-  config.vm.provision "teeworlds", type: "ansible" do |teeworlds|
+  config.vm.provision "teeworlds", type: "ansible", run: "never" do |teeworlds|
     teeworlds.playbook = "provisioning/playbook.yml"
     teeworlds.tags = "teeworlds"
     teeworlds.verbose = "vv"
   end
 
   # Certbot provisioning
-  config.vm.provision "certbot", type: "ansible" do |certbot|
+  config.vm.provision "certbot", type: "ansible", run: "never" do |certbot|
     certbot.playbook = "provisioning/playbook.yml"
-    certbot.tags = "teeworlds"
+    certbot.tags = "certbot"
     certbot.verbose = "vv"
   end
 
   # Build provisioning
-  config.vm.provision "build", type: "ansible" do |build|
+  config.vm.provision "build", type: "ansible", run: "never" do |build|
     build.playbook = "provisioning/playbook.yml"
     build.tags = "build"
     build.verbose = "vv"
+  end
+
+  # Database provisioning
+  config.vm.provision "db", type: "ansible", run: "never" do |db|
+    db.playbook = "provisioning/playbook.yml"
+    db.tags = "db"
+    db.verbose = "vv"
   end
 
   # Setup the greeting message
