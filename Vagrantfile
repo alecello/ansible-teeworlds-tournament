@@ -73,12 +73,4 @@ Vagrant.configure("2") do |config|
     db.tags = "db"
     db.verbose = "vv"
   end
-
-  # Setup the greeting message
-  config.vm.post_up_message = <<-END
-  TEST MESSAGE.
-  IN THE FUTURE USEFUL INFORMATION WILL BE STORED HERE.
-  ASD ASD ASD ASD ASD ASD ASD ASD ASD ASD ASD ASD ASD ASD
-  Let's see if i can reference variable names: #{config.vm.hostname}
-  END
 end

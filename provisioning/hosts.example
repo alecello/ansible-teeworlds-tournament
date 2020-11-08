@@ -1,0 +1,1 @@
+example.com ansible_connection=ssh ansible_user=example

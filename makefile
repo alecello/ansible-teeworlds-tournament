@@ -67,3 +67,6 @@ db:
 
 	# Run the content provisioner for database
 	vagrant provision --provision-with db
+
+deploy:
+	ansible-playbook -i provisioning/hosts provisioning/playbook.yml

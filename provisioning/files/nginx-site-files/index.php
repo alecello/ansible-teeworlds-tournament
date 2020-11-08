@@ -107,7 +107,7 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 </head>
 <body>
 <div id="header">
-<h1>Torneo di Teeworlds (qui si può mettere un'immagine)</h1>
+<h1>Torneo di Teeworlds - Linux Day 2020</h1>
 </div>
 <div class="container mt-3">
 <ul class="nav nav-tabs mb-3" role="tablist">
@@ -136,16 +136,20 @@ if($iscritti) {
 <div class="tab-content ml-3 mr-3" id="theTabs">
 	<div class="tab-pane <?= $register ? '' : 'show active' ?>" id="torneo" role="tabpanel" aria-labelledby="torneo-tab">
 		<h2>Il torneo</h2>
-		<p>Qui si torna e si ritorna.</p>
-		<?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
-		<p>Il torneo si terrà il giorno ... dalle ... alle ...</p>
-		<p>Si vince in base a ... e il premio è una pacca sulla spalla</p>
-		<p>Le regole sono:</p>
+		<p>Benvenuto nel torneo prode guerriero!</p>
+		<p>La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!</p>
+		<p>Il torneo è un semplice death match vanilla con round fissi da dieci minuti.</p>
+		<p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
+		<p>L'email viene usata puramente per contattare il vincitore. Rispettiamo la privacy dei Tee quindi l'email è interamente opzionale - basta metterne una invalida durante la registrazione, come example@example.com - tuttavia in caso di assenza di un indirizzo email del vincitore, vista la nostra incapacità di identificare i giocatori se non appunto tramite mail, il premio andrà al primo posto che ha specificato un indirizzo valido.</p>
+		<p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula: ***FORMULA***</p>
+		<p>Le regole sono semplici:</p>
 		<ul>
-			<li>Lorem</li>
-			<li>Ipsum</li>
-			<li>Boh, soprattutto il boh</li>
+			<li>Non fare account doppi</li>
+			<li>Non entrare con più di un profilo contemporaneamente</li>
+			<li>Non fare niente che possa rovinare il gioco ad altri giocatori</li>
 		</ul>
+		<p>Il torneo si terrà il giorno ... dalle ... alle ...</p>
+		<?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
 		<p><a class="btn btn-primary" id="registrati-goto-button" data-toggle="tab" aria-controls="registrati" href="#registrati" onclick="$('#registrati-tab').tab('show')">Registrati!</a></p>
 	</div>
 	<div class="tab-pane" id="classifica" role="tabpanel" aria-labelledby="classifica-tab">
@@ -288,7 +292,7 @@ JOIN players AS d ON killed = d.password
 				<div class="form-group">
 					<label for="registratiFormEmail">Indirizzo email</label>
 					<input name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" type="email" required="required" class="form-control" id="registratiFormEmail" aria-describedby="emailHelp">
-					<small id="emailHelp" class="form-text text-muted">Utilizzato solo per il reset password che non c'è.</small>
+					<small id="emailHelp" class="form-text text-muted">Utilizzato solo per contattare il vincitore.</small>
 				</div>
 				<div class="form-group form-check">
 					<input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">

@@ -1,5 +1,6 @@
 # Do not include secrets in the repo
 provisioning/secrets.yml
+provisioning/hosts
 
 # Remove other people's roles but not ours
 provisioning/roles/*
