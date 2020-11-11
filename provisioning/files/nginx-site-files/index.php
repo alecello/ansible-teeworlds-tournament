@@ -1,5 +1,5 @@
-<!doctype html>
-<html lang="it">
+<!DOCTYPE HTML>
+
 <?php
 
 function genpassword() {
@@ -96,32 +96,7 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 		$db = NULL;
 	}
 }
-?>
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-	<link href="https://www.linux.it/shared/index.php?f=main.css" rel="stylesheet" type="text/css">
-	<link rel="stylesheet" href="index.css">
-	<title>Torneo di Teeworlds</title>
-</head>
-<body>
-<div id="header">
-<h1>Torneo di Teeworlds - Linux Day 2020</h1>
-</div>
-<div class="container mt-3">
-<ul class="nav nav-tabs mb-3" role="tablist">
-	<li class="nav-item" role="presentation">
-		<a class="nav-link <?= $register ? '' : 'active' ?>" id="torneo-tab" data-toggle="tab" href="#torneo" role="tab" aria-controls="torneo" aria-selected="<?= $register ? 'false' : 'true' ?>">Torneo</a>
-	</li>
-	<li class="nav-item" role="presentation">
-		<a class="nav-link" id="classifica-tab" data-toggle="tab" href="#classifica" role="tab" aria-controls="classifica" aria-selected="false">Classifica</a>
-	</li>
-	<li class="nav-item" role="presentation">
-		<a class="nav-link <?= $register ? 'active' : '' ?>" id="registrati-tab" data-toggle="tab" href="#registrati" role="tab" aria-controls="registrati" aria-selected="<?= $register ? 'true' : 'false' ?>">Registrati</a>
-	</li>
-</ul>
-<?php
+
 $db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
 $iscritti = $db->query("SELECT COUNT(*) FROM players;");
 $iscritti = $iscritti->fetchArray(SQLITE3_NUM);
@@ -132,180 +107,231 @@ if($iscritti) {
 } else {
 	$iscritti = NULL;
 }
+
 ?>
-<div class="tab-content ml-3 mr-3" id="theTabs">
-	<div class="tab-pane <?= $register ? '' : 'show active' ?>" id="torneo" role="tabpanel" aria-labelledby="torneo-tab">
-		<h2>Il torneo</h2>
-		<p>Benvenuto nel torneo prode guerriero!</p>
-		<p>La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!</p>
-		<p>Il torneo è un semplice death match vanilla con round fissi da dieci minuti.</p>
-		<p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
-		<p>L'email viene usata puramente per contattare il vincitore. Rispettiamo la privacy dei Tee quindi l'email è interamente opzionale - basta metterne una invalida durante la registrazione, come example@example.com - tuttavia in caso di assenza di un indirizzo email del vincitore, vista la nostra incapacità di identificare i giocatori se non appunto tramite mail, il premio andrà al primo posto che ha specificato un indirizzo valido.</p>
-		<p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula: ***FORMULA***</p>
-		<p>Le regole sono semplici:</p>
-		<ul>
-			<li>Non fare account doppi</li>
-			<li>Non entrare con più di un profilo contemporaneamente</li>
-			<li>Non fare niente che possa rovinare il gioco ad altri giocatori</li>
-		</ul>
-		<p>Il torneo si terrà il giorno ... dalle ... alle ...</p>
-		<?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
-		<p><a class="btn btn-primary" id="registrati-goto-button" data-toggle="tab" aria-controls="registrati" href="#registrati" onclick="$('#registrati-tab').tab('show')">Registrati!</a></p>
-	</div>
-	<div class="tab-pane" id="classifica" role="tabpanel" aria-labelledby="classifica-tab">
-		<table class="table table-striped table-borderless">
-			<thead class="thead-dark">
-			<tr>
-				<th scope="col">🏆</th>
-				<th scope="col">Nome</th>
-				<th scope="col">Kills (uniche)</th>
-				<th scope="col">Deaths</th>
-			</tr>
-			</thead>
-			<tbody>
-			<?php
-			if(file_exists('classifica.html')) {
-				$lastUpdate = filemtime('classifica.html');
-			} else {
-				$lastUpdate = 0;
-			}
-			// Old file
-			if($lastUpdate + CLASSIFICA_UPDATE_SECONDS < time() && !file_exists('update_in_progress.lock')) {
-				touch('update_in_progress.lock');
-				$lastUpdate = time();
-				// Update it
-				$db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
 
-				// TODO: WHERE ... with a timetstamp to filter different turns
-				$stmt = $db->prepare("
-SELECT k.name AS killer, d.name AS killed
-FROM kills
-JOIN players AS k ON killer = k.password
-JOIN players AS d ON killed = d.password
-;");
-				$result = $stmt->execute();
-				if($result === false) {
-					die("Error 3");
-				}
-
-				// TODO: can this cause a division by 0?
-				// Player => Points calculated according to (K/(D+1))*(unique_players_killed/total_players)
-				$players = [];
-
-				$killsCounter = [];
-				$deathsCounter = [];
-				$uniqueKills = [];
-
-				while(($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
-					$k = $row['killer'];
-					$d = $row['killed'];
-
-					// Initialize values if we never encountered this player
-					if(!isset($players[$k])) {
-						$players[$k] = 0;
-						$killsCounter[$k] = 0;
-						$deathsCounter[$k] = 0;
-						$uniqueKills[$k] = [];
-					}
-					if(!isset($players[$d])) {
-						$players[$d] = 0;
-						$killsCounter[$d] = 0;
-						$deathsCounter[$d] = 0;
-						$uniqueKills[$d] = [];
-					}
-
-					if($k === $d) {
-						// Special case
-						$deathsCounter[$d]++;
-					} else {
-						// +1 kill
-						$killsCounter[$k]++;
-						// +1 death
-						$deathsCounter[$d]++;
-						// Add to uniques
-						if(!isset($uniqueKills[$k][$d])) {
-							$uniqueKills[$k][$d] = 0;
-						}
-						// Can be counted if we want (how many times player X killed player Y)
-						// $uniqueKills[$k][$d]++;
-					}
-				}
-				foreach($players as $player => &$points) {
-					$points = ($killsCounter[$player] / ($deathsCounter[$player] + 1)) * (count($uniqueKills[$player]) / count($players));
-				}
-
-				arsort($players);
-
-				$html = '';
-				$i = 1;
-				// It's sorted now
-				foreach($players as $player => &$points) {
-					$name = htmlspecialchars($player);
-					$unique = count($uniqueKills[$player]);
-					$html .= "
-<tr>
-	<th>$i</th>
-	<th>$player</th>
-	<td>${killsCounter[$player]} ($unique)</td>
-	<td>${deathsCounter[$player]}</td>
-</tr>";
-					$i++;
-				}
-
-				file_put_contents('classifica.html', $html);
-				$html = NULL;
-
-				$db->close();
-				$db = NULL;
-
-				unlink('update_in_progress.lock');
-			}
-
-			echo file_get_contents('classifica.html');
-			?>
-			</tbody>
-		</table>
-
-		<small>Ultimo aggiornamento: <?= date('Y-m-d H:i:s', $lastUpdate) ?></small>
-	</div>
-	<div class="tab-pane <?= $register ? 'show active' : '' ?>" id="registrati" role="tabpanel" aria-labelledby="registrati-tab">
-		<?php if($register && $registerError === NULL): ?>
-			<h2>Registrazione completata</h2>
-			<p>Questa è la password <small>(case-insensitive)</small> che userai per entrare nel server:</p>
-			<div class="alert alert-primary password" role="alert">
-				<?= htmlspecialchars($password) ?>
-			</div>
-			<p>Salvala, stampala, scrivila, prendi nota, <strong>non avrai modo di tornare a questa pagina</strong>!</p>
-		<?php else: ?>
-			<h2>Registrati</h2>
-			<?php if($registerError !== NULL): ?>
-				<div class="alert alert-danger" role="alert">
-					<?= $registerError ?>
+<html>
+	<head>
+		<title>Paradigm Shift by HTML5 UP</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+		<div id="wrapper">
+			<section class="intro">
+				<header>
+					<h1>Torneo Teeworlds</h1>
+					<p>Sabato 28 Novembre</p>
+					<ul class="actions">
+						<li><a href="#first" class="arrow scrolly"><span class="label">Next</span></a></li>
+					</ul>
+				</header>
+				<div class="content">
+					<span class="image fill" data-position="center"><img src="images/pic01.jpg" alt="" /></span>
 				</div>
-			<?php endif; ?>
-			<form action="#" method="post">
-				<div class="form-group">
-					<label for="registratiFormNome">Nome nel gioco</label>
-					<input name="nome" pattern="[a-zA-Z0-9\-_ .,;:!?]+" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" type="text" required="required" maxlength="15" class="form-control" id="registratiFormNome" aria-describedby="nomeHelp">
-					<small id="nomeHelp" class="form-text text-muted">Il nome visualizzato nel gioco, massimo 15 caratteri. Sono ammessi caratteri alfanumerici, spazio, trattino, underscore e alcuni segni di punteggiatura: .,;:!?</small>
+			</section>
+
+			<section id="first">
+				<header>
+					<h2>Intro</h2>
+				</header>
+				<div class="content">
+                    <h2>Il torneo</h2>
+                    <p>Benvenuto nel torneo, prode guerriero!</p>
+                    <p>La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!</p>
+                    <br>
+                    <p>Il torneo è un semplice death match vanilla con round fissi da dieci minuti.</p>
+                    <p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
+                    <br>
+                    <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula: ***FORMULA***</p>
+                    <p>Le regole sono semplici:</p>
+                    <ul>
+                        <li>Non fare account doppi</li>
+                        <li>Non entrare con più di un profilo contemporaneamente</li>
+                        <li>Non fare niente che possa rovinare il gioco ad altri giocatori</li>
+                    </ul>
+                    <p>Il torneo si terrà il giorno Sabato 28 Novembre dalle 15:00 a oltranza</p>
+                    <?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono attualmente <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
+                    <p><a class="button primary scrolly" id="registrati-goto-button" href="#registrati">Registrati!</a></p>
+                </div>
+            </section>
+
+            <!--
+			<section>
+				<header>
+					<h2>Classifica</h2>
+				</header>
+				<div class="content">
+                    <table class="table table-striped table-borderless">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">🏆</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Kills (uniche)</th>
+                            <th scope="col">Deaths</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        if(file_exists('classifica.html')) {
+                            $lastUpdate = filemtime('classifica.html');
+                        } else {
+                            $lastUpdate = 0;
+                        }
+                        // Old file
+                        if($lastUpdate + CLASSIFICA_UPDATE_SECONDS < time() && !file_exists('update_in_progress.lock')) {
+                            touch('update_in_progress.lock');
+                            $lastUpdate = time();
+                            // Update it
+                            $db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
+
+                            // TODO: WHERE ... with a timetstamp to filter different turns
+                            $stmt = $db->prepare("
+                                SELECT k.name AS killer, d.name AS killed
+                                FROM kills
+                                JOIN players AS k ON killer = k.password
+                                JOIN players AS d ON killed = d.password
+                                ;");
+
+                            $result = $stmt->execute();
+                            if($result === false) {
+                                die("Error 3");
+                            }
+
+                            // TODO: can this cause a division by 0?
+                            // Player => Points calculated according to (K/(D+1))*(unique_players_killed/total_players)
+                            $players = [];
+
+                            $killsCounter = [];
+                            $deathsCounter = [];
+                            $uniqueKills = [];
+
+                            while(($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
+                                $k = $row['killer'];
+                                $d = $row['killed'];
+
+                                // Initialize values if we never encountered this player
+                                if(!isset($players[$k])) {
+                                    $players[$k] = 0;
+                                    $killsCounter[$k] = 0;
+                                    $deathsCounter[$k] = 0;
+                                    $uniqueKills[$k] = [];
+                                }
+                                if(!isset($players[$d])) {
+                                    $players[$d] = 0;
+                                    $killsCounter[$d] = 0;
+                                    $deathsCounter[$d] = 0;
+                                    $uniqueKills[$d] = [];
+                                }
+
+                                if($k === $d) {
+                                    // Special case
+                                    $deathsCounter[$d]++;
+                                } else {
+                                    // +1 kill
+                                    $killsCounter[$k]++;
+                                    // +1 death
+                                    $deathsCounter[$d]++;
+                                    // Add to uniques
+                                    if(!isset($uniqueKills[$k][$d])) {
+                                        $uniqueKills[$k][$d] = 0;
+                                    }
+                                    // Can be counted if we want (how many times player X killed player Y)
+                                    // $uniqueKills[$k][$d]++;
+                                }
+                            }
+                            foreach($players as $player => &$points) {
+                                $points = ($killsCounter[$player] / ($deathsCounter[$player] + 1)) * (count($uniqueKills[$player]) / count($players));
+                            }
+
+                            arsort($players);
+
+                            $html = '';
+                            $i = 1;
+                            // It's sorted now
+                            foreach($players as $player => &$points) {
+                                $name = htmlspecialchars($player);
+                                $unique = count($uniqueKills[$player]);
+                                $html .= "
+                                    <tr>
+                                        <th>$i</th>
+                                        <th>$player</th>
+                                        <td>${killsCounter[$player]} ($unique)</td>
+                                        <td>${deathsCounter[$player]}</td>
+                                    </tr>";
+                                $i++;
+                            }
+
+                            file_put_contents('classifica.html', $html);
+                            $html = NULL;
+
+                            $db->close();
+                            $db = NULL;
+
+                            unlink('update_in_progress.lock');
+                        }
+
+                        echo file_get_contents('classifica.html');
+                        ?>
+                        </tbody>
+                    </table>
+
+                    <small>Ultimo aggiornamento: <?= date('Y-m-d H:i:s', $lastUpdate) ?></small>
 				</div>
-				<div class="form-group">
-					<label for="registratiFormEmail">Indirizzo email</label>
-					<input name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" type="email" required="required" class="form-control" id="registratiFormEmail" aria-describedby="emailHelp">
-					<small id="emailHelp" class="form-text text-muted">Utilizzato solo per contattare il vincitore.</small>
+			</section>
+            -->
+
+			<section id="registrati">
+				<header>
+					<h2>Registrati</h2>
+				</header>
+				<div class="content">
+                    <?php if($register && $registerError === NULL): ?>
+                        <h2>Registrazione completata</h2>
+                        <p>Questa è la password <small>(case-insensitive)</small> che userai per entrare nel server:</p>
+                        <div class="alert alert-primary password" role="alert">
+                            <?= htmlspecialchars($password) ?>
+                        </div>
+                        <p>Salvala, stampala, scrivila, prendi nota, <strong>non avrai modo di tornare a questa pagina</strong>!</p>
+                    <?php else: ?>
+                        <h2>Registrati</h2>
+                        <?php if($registerError !== NULL): ?>
+                            <div class="alert alert-danger" role="alert">
+                                <?= $registerError ?>
+                            </div>
+                        <?php endif; ?>
+                        <form action="#" method="post">
+                            <div class="form-group">
+                                <label for="registratiFormNome">Nome nel gioco</label>
+                                <input name="nome" pattern="[a-zA-Z0-9\-_ .,;:!?]+" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" type="text" required="required" maxlength="15" class="form-control" id="registratiFormNome" aria-describedby="nomeHelp">
+                                <small id="nomeHelp" class="form-text text-muted">Il nome visualizzato nel gioco, massimo 15 caratteri. Sono ammessi caratteri alfanumerici, spazio, trattino, underscore e alcuni segni di punteggiatura: .,;:!?</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="registratiFormEmail">Indirizzo email</label>
+                                <input name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" type="email" required="required" class="form-control" id="registratiFormEmail" aria-describedby="emailHelp">
+                                <small id="emailHelp" class="form-text text-muted">Viene utilizzato solo per contattare i vincitori!</small>
+                            </div>
+                            <div class="form-group form-check">
+                                <input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
+                                <label class="form-check-label" for="registratiFormCheck1">Ho letto e accetto le condizioni generali e particolari e le cose della privacy e prometto di non barare.</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Invia</button>
+                        </form>
+                    <?php endif; ?>
 				</div>
-				<div class="form-group form-check">
-					<input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
-					<label class="form-check-label" for="registratiFormCheck1">Ho letto e accetto le condizioni generali e particolari e le cose della privacy e prometto di non barare.</label>
-				</div>
-				<button type="submit" class="btn btn-primary">Invia</button>
-			</form>
-		<?php endif; ?>
-	</div>
-</div>
-</div>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
-</body>
+			</section>
+
+			<div class="copyright">Powered by <a href="https://www.ils.org/">Italian Linux Society</a>. Design: <a href="https://html5up.net">HTML5 UP</a>.</div>
+		</div>
+
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+	</body>
 </html>
