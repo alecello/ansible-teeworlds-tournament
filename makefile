@@ -68,5 +68,11 @@ db:
 	# Run the content provisioner for database
 	vagrant provision --provision-with db
 
-deploy:
+deploy-full:
 	ansible-playbook -i provisioning/hosts provisioning/playbook.yml
+
+deploy-site:
+	ansible-playbook -i provisioning/hosts provisioning/playbook.yml -t site
+
+deploy-teeworlds:
+	ansible-playbook -i provisioning/hosts provisioning/playbook.yml -t teeworlds
