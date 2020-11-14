@@ -32,7 +32,9 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 		$registerError = 'Non hai accettato le condizioni';
 	} else if(preg_match("#^[a-zA-Z0-9\-_ .,;:!?]+$#", $_POST['nome']) !== 1) {
 		$registerError = 'Il nome contiene caratteri non validi';
-	}
+	} else if(!REGISTRATIONS_ENABLED) {
+        $registerError = 'Le registrazioni sono chiuse';
+    }
 	if($registerError === NULL) {
 		// Generate password
 		$password = genpassword();
@@ -140,7 +142,7 @@ if($iscritti) {
 					<h2>Intro</h2>
 				</header>
 				<div class="content">
-                    <h2 id="tournament">Il torneo</h2>
+                    <h2>Il torneo</h2>
                     <p>Benvenuto nel torneo, prode guerriero!</p>
                     <p>La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!</p>
                     <br>
@@ -314,7 +316,7 @@ if($iscritti) {
                             <?= htmlspecialchars($password) ?>
                         </div>
                         <p>Salvala, stampala, scrivila, prendi nota, <strong>non avrai modo di tornare a questa pagina</strong>!</p>
-                    <?php else: ?>
+                    <?php elseif(REGISTRATIONS_ENABLED): ?>
                         <h2>Registrati</h2>
                         <?php if($registerError !== NULL): ?>
                             <div class="alert alert-danger" role="alert">
@@ -337,10 +339,19 @@ if($iscritti) {
                             <br>
                             <div class="form-group form-check">
                                 <input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
-                                <label class="form-check-label" for="registratiFormCheck1">Ho letto <a href="#tournament">quanto sopra riportato</a> e prometto di non barare.</label>
+                                <label class="form-check-label" for="registratiFormCheck1">Ho letto <a href="#first">quanto sopra riportato</a> e prometto di non barare.</label>
                             </div>
                             <button type="submit" class="btn btn-primary">Invia</button>
                         </form>
+                    <?php else: ?>
+                        <?php
+                            if($registerError === NULL)
+                            {
+                                echo "<div class=\"alert alert-info\" role=\"alert\">Le registrazioni sono chiuse.</div>";
+                            } else {
+                                echo "<div class=\"alert alert-danger\" role=\"alert\">$registerError</div>";
+                            }
+                        ?>
                     <?php endif; ?>
 				</div>
 			</section>
