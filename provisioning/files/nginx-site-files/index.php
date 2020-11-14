@@ -352,6 +352,7 @@ if($iscritti) {
                             <button type="submit" class="btn btn-primary">Invia</button>
                         </form>
                     <?php else: ?>
+                        <h2>Registrati</h2>
                         <?php
                             if($registerError === NULL)
                             {
