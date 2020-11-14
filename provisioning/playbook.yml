@@ -265,6 +265,40 @@
 #      when: (not phpmailer_stat.stat.exists or phpmailer_clone.changed) or (force_rebuild | default(false))
 
 
+    - name: Create the teeworlds-db group
+      tags: [ teeworlds, site ]
+      group:
+        name: "teeworlds-db"
+        system: yes
+        state: "present"
+
+
+    - name: Create the teeworlds-db user
+      tags: [ teeworlds, site ]
+      user:
+        name: "teeworlds-db"
+        group: "teeworlds-db"
+        password: "!"
+        shell: "/usr/sbin/nologin"
+        system: yes
+        create_home: no
+        state: "present"
+
+
+    - name: Add user www-data to group teeworlds-db
+      tags: [ teeworlds, site ]
+      user:
+        name: "www-data"
+        groups: "teeworlds-db"
+
+
+    - name: Add user teeworlds to group teeworlds-db
+      tags: [ teeworlds, site ]
+      user:
+        name: "teeworlds"
+        groups: "teeworlds-db"
+
+
     - name: Remove previous site files
       tags: [ site ]
       file:
@@ -282,13 +316,23 @@
           dest: "{{ http_dir }}"
           owner: "root"
           group: "root"
-          mode: 0755
+          mode: 0555
 
 
     - name: Move copied folder to {{ root_dir }}
       tags: [ site ]
       command:
         cmd: "mv {{ http_dir }}/nginx-site-files {{ root_dir }}"
+    
+    
+    - name: Set permissions on NGINX root
+      tags: [ site ]
+      file:
+        state: "directory"
+        path: "{{ root_dir }}"
+        owner: "root"
+        group: "teeworlds-db"
+        mode: 0775
 
 
     - name: Stat config.php
@@ -398,40 +442,6 @@
         state: "present"
 
 
-    - name: Create the teeworlds-db group
-      tags: [ teeworlds ]
-      group:
-        name: "teeworlds-db"
-        system: yes
-        state: "present"
-
-
-    - name: Create the teeworlds-db user
-      tags: [ teeworlds ]
-      user:
-        name: "teeworlds-db"
-        group: "teeworlds-db"
-        password: "!"
-        shell: "/usr/sbin/nologin"
-        system: yes
-        create_home: no
-        state: "present"
-
-
-    - name: Add user www-data to group teeworlds-db
-      tags: [ teeworlds ]
-      user:
-        name: "www-data"
-        groups: "teeworlds-db"
-
-
-    - name: Add user teeworlds to group teeworlds-db
-      tags: [ teeworlds ]
-      user:
-        name: "teeworlds"
-        groups: "teeworlds-db"
-
-
     - name: Install Teeworlds server service
       tags: [ teeworlds ]
       copy:
@@ -507,6 +517,16 @@
       copy:
         src: "files/teeworlds/database/database.py"
         dest: "/opt/teeworlds/database.py"
+        owner: "root"
+        group: "root"
+        mode: 0555
+    
+    
+    - name: Copy database dump script to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/database/dump.sh"
+        dest: "/opt/teeworlds/dump.sh"
         owner: "root"
         group: "root"
         mode: 0555
