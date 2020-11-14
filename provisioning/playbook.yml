@@ -9,8 +9,27 @@
     root_dir: "/var/www/html/site"
     dh_param_path: "/etc/nginx/dhparam-2048.pem"
 
+    # Tournament start (local time)
+    tournament_hour: "15"
+    tournament_minute: "00"
+    tournament_day: "28"
+    tournament_month: "11"
+
+    # Registration end (local time)
+    registration_end_hour: "14"
+    registration_end_minute: "00"
+    registration_end_day: "28"
+    registration_end_month: "11"
+
+    # Teeworlds files
+    credentials_file: "/opt/teeworlds/creds.txt"
+    database_file: "/opt/teeworlds/data/database"
+    dump_script: "/opt/teeworlds/dump.sh"
+
+
 
   vars_files: "secrets.yml"
+
 
 
   pre_tasks:
@@ -121,8 +140,8 @@
       tags: [ certbot ]
       become: true
       certbot_auto_renew: true
-      certbot_auto_renew_hour: 3    # Should dodge both late-nigth people and early-morning people.
-      certbot_auto_renew_minute: 0
+      certbot_auto_renew_hour: "3"    # Should dodge both late-nigth people and early-morning people.
+      certbot_auto_renew_minute: "0"
       certbot_auto_renew_options: "--quiet --no-self-upgrade" # look up
       certbot_create_if_missing: true
       certbot_admin_email: "{{ admin_email }}"
@@ -487,8 +506,8 @@
       file:
         path: "/opt/teeworlds"
         state: "directory"
-        owner: "root"
-        group: "root"
+        owner: "teeworlds"
+        group: "teeworlds"
         mode: 0755
 
 
@@ -576,7 +595,7 @@
         path: "/opt/teeworlds/creds.txt"
         owner: "teeworlds"
         group: "teeworlds"
-        mode: 0400
+        mode: 0600
         state: "touch"
 
 
@@ -586,7 +605,7 @@
         path: "/opt/teeworlds/admin.txt"
         owner: "teeworlds"
         group: "teeworlds"
-        mode: 0400
+        mode: 0600
         state: "touch"
 
 
@@ -618,8 +637,36 @@
         state: "file"
 
 
-    - name: Start the teeworlds service
+    - name: Start the database service
       tags: [ teeworlds ]
       service:
-        name: "teeworlds-server"
+        name: "teeworlds-db"
         state: "started"
+
+
+    - name: Set cron job to dump the database
+      tags: [ teeworlds, db ]
+      cron:
+        name: "Start tournament"
+
+        hour: "{{ tournament_hour }}"
+        minute: "{{ tournament_minute }}"
+        day: "{{ tournament_day }}"
+        month: "{{ tournament_month }}"
+
+        job: "{{ dump_script }} {{ database_file }} {{ credentials_file }}"
+        user: "teeworlds"
+
+
+    - name: Set cron job to dump the start the server
+      tags: [ teeworlds ]
+      cron:
+        name: "Start tournament"
+
+        hour: "{{ tournament_hour }}"
+        minute: "{{ tournament_minute }}"
+        day: "{{ tournament_day }}"
+        month: "{{ tournament_month }}"
+
+        job: "systemctl start teeworlds-server.service"
+        user: "root"

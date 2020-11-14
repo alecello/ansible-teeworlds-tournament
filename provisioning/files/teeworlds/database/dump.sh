@@ -1,4 +1,4 @@
 #!/bin/bash
 
-rm creds.txt
-sqlite3 data/database "SELECT password || ' ' || name FROM players" > creds.txt
+rm $2
+sqlite3 $1 "SELECT password || ' ' || name FROM players" > $2
