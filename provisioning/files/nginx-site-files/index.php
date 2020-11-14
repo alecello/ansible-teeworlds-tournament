@@ -309,7 +309,7 @@ if($iscritti) {
                             </div>
                             <br>
                         <?php endif; ?>
-                        <form action="#" method="post">
+                        <form action="#registrati" method="post">
                             <div class="form-group">
                                 <label for="registratiFormNome">Nome nel gioco</label>
                                 <input name="nome" pattern="[a-zA-Z0-9\-_ .,;:!?]+" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" type="text" required="required" maxlength="15" class="form-control" id="registratiFormNome" aria-describedby="nomeHelp">
