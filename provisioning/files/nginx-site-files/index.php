@@ -23,7 +23,7 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 	if(strlen($_POST['nome']) > 16) {
 		$registerError = 'Nome troppo lungo';
 	} else if(strlen($_POST['email']) > 1000) {
-		$registerError = 'Email troppo lunga, non puoi accorciarla a 1000 caratteri max?';
+		$registerError = 'Email troppo lunga, non puoi accorciarla a 1000 caratteri?';
 	} else if(strlen($_POST['nome']) <= 0) {
 		$registerError = 'Il nome non può essere vuoto';
 	} else if(strlen($_POST['email']) <= 0) {
@@ -118,6 +118,7 @@ if($iscritti) {
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/alert.css" />
 	</head>
 	<body class="is-preload">
 		<div id="wrapper">
@@ -139,14 +140,18 @@ if($iscritti) {
 					<h2>Intro</h2>
 				</header>
 				<div class="content">
-                    <h2>Il torneo</h2>
+                    <h2 id="tournament">Il torneo</h2>
                     <p>Benvenuto nel torneo, prode guerriero!</p>
                     <p>La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!</p>
                     <br>
                     <p>Il torneo è un semplice death match vanilla con round fissi da dieci minuti.</p>
                     <p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
                     <br>
-                    <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula: ***FORMULA***</p>
+                    <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula:</p>
+                    <br>
+                    <p><b>(kills / (deaths + 1)) * (kill uniche / kills)</b></p>
+                    <br>
+                    <p>Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo.</p>
                     <p>Le regole sono semplici:</p>
                     <ul>
                         <li>Non fare account doppi</li>
@@ -302,6 +307,7 @@ if($iscritti) {
                             <div class="alert alert-danger" role="alert">
                                 <?= $registerError ?>
                             </div>
+                            <br>
                         <?php endif; ?>
                         <form action="#" method="post">
                             <div class="form-group">
@@ -309,14 +315,16 @@ if($iscritti) {
                                 <input name="nome" pattern="[a-zA-Z0-9\-_ .,;:!?]+" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" type="text" required="required" maxlength="15" class="form-control" id="registratiFormNome" aria-describedby="nomeHelp">
                                 <small id="nomeHelp" class="form-text text-muted">Il nome visualizzato nel gioco, massimo 15 caratteri. Sono ammessi caratteri alfanumerici, spazio, trattino, underscore e alcuni segni di punteggiatura: .,;:!?</small>
                             </div>
+                            <br>
                             <div class="form-group">
                                 <label for="registratiFormEmail">Indirizzo email</label>
                                 <input name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" type="email" required="required" class="form-control" id="registratiFormEmail" aria-describedby="emailHelp">
                                 <small id="emailHelp" class="form-text text-muted">Viene utilizzato solo per contattare i vincitori!</small>
                             </div>
+                            <br>
                             <div class="form-group form-check">
                                 <input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
-                                <label class="form-check-label" for="registratiFormCheck1">Ho letto e accetto le condizioni generali e particolari e le cose della privacy e prometto di non barare.</label>
+                                <label class="form-check-label" for="registratiFormCheck1">Ho letto <a href="#tournament">quanto sopra riportato</a> e prometto di non barare.</label>
                             </div>
                             <button type="submit" class="btn btn-primary">Invia</button>
                         </form>

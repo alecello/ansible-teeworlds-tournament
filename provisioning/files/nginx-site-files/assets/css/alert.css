@@ -1,0 +1,12 @@
+.alert {
+    padding: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    border-radius: 0.325rem;
+  }
+
+.alert-danger
+{
+  background-color: #f44336;
+  color: white;
+}
