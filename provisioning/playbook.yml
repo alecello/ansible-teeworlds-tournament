@@ -9,14 +9,14 @@
     root_dir: "/var/www/html/site"
     dh_param_path: "/etc/nginx/dhparam-2048.pem"
 
-    # Tournament start (local time)
-    tournament_hour: "15"
+    # Tournament start (in timezone used by cron - by default UTC)
+    tournament_hour: "14"
     tournament_minute: "00"
     tournament_day: "28"
     tournament_month: "11"
 
-    # Registration end (local time)
-    registration_end_hour: "14"
+    # Registration end (in timezone used by cron - by default UTC)
+    registration_end_hour: "13"
     registration_end_minute: "00"
     registration_end_day: "28"
     registration_end_month: "11"
@@ -644,7 +644,21 @@
         state: "started"
 
 
-    - name: Set cron job to dump the database
+    - name: Set cron job to stop registrations
+      tags: [ site, db ]
+      cron:
+        name: "Close registrations"
+
+        hour: "{{ registration_end_hour }}"
+        minute: "{{ registration_end_minute }}"
+        day: "{{ registration_end_day }}"
+        month: "{{ registration_end_month }}"
+
+        job: "cp {{ root_dir }}/config.php {{ root_dir }}/config.bak; sed 's/\"REGISTRATIONS_ENABLED\", true/\"REGISTRATIONS_ENABLED\", false/g' {{ root_dir }}/config.bak > {{ root_dir }}/config.php"
+        user: "root"
+
+
+    - name: Set cron job to dump the start the server
       tags: [ teeworlds, db ]
       cron:
         name: "Start tournament"
@@ -654,19 +668,5 @@
         day: "{{ tournament_day }}"
         month: "{{ tournament_month }}"
 
-        job: "{{ dump_script }} {{ database_file }} {{ credentials_file }}"
-        user: "teeworlds"
-
-
-    - name: Set cron job to dump the start the server
-      tags: [ teeworlds ]
-      cron:
-        name: "Start tournament"
-
-        hour: "{{ tournament_hour }}"
-        minute: "{{ tournament_minute }}"
-        day: "{{ tournament_day }}"
-        month: "{{ tournament_month }}"
-
-        job: "systemctl start teeworlds-server.service"
+        job: "sudo -u teeworlds {{ dump_script }} {{ database_file }} {{ credentials_file }}; systemctl start teeworlds-server.service"
         user: "root"
