@@ -121,6 +121,14 @@ if($iscritti) {
 		<meta name="keywords" content="" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link rel="stylesheet" href="assets/css/alert.css" />
+
+        <!-- Override the last element in the history with a GET request to the webpage itself. -->
+        <!-- This is done to prevent form resubmissions if someone refreshes after signing up.  -->
+        <script>
+            if(window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
 	</head>
 	<body class="is-preload">
 		<div id="wrapper">
