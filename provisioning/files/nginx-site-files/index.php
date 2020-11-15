@@ -16,6 +16,13 @@ include 'config.php';
 // Not a form submission
 $register = false;
 
+// Password not retrievered from session
+$sessionPassword = false;
+
+// Lifetime of session
+// 14 days is enough to survive the tournament without refreshes
+$sessionTime = 60 * 60 * 24 * 14;
+
 // If this is a form submission
 if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_POST['checkbox1'])) {
 	$register = true;
@@ -23,7 +30,7 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 	if(strlen($_POST['nome']) > 16) {
 		$registerError = 'Nome troppo lungo';
 	} else if(strlen($_POST['email']) > 1000) {
-		$registerError = 'Email troppo lunga, non puoi accorciarla a 1000 caratteri max?';
+		$registerError = 'Email troppo lunga, non puoi accorciarla a 1000 caratteri?';
 	} else if(strlen($_POST['nome']) <= 0) {
 		$registerError = 'Il nome non può essere vuoto';
 	} else if(strlen($_POST['email']) <= 0) {
@@ -32,7 +39,9 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 		$registerError = 'Non hai accettato le condizioni';
 	} else if(preg_match("#^[a-zA-Z0-9\-_ .,;:!?]+$#", $_POST['nome']) !== 1) {
 		$registerError = 'Il nome contiene caratteri non validi';
-	}
+	} else if(!REGISTRATIONS_ENABLED) {
+        $registerError = 'Le registrazioni sono chiuse';
+    }
 	if($registerError === NULL) {
 		// Generate password
 		$password = genpassword();
@@ -93,8 +102,21 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 
 		// Release the lock
 		$db->close();
-		$db = NULL;
+        $db = NULL;
+
+        // Store password in session
+        session_start(['cookie_secure' => true, 'cookie_httponly' => true, 'cookie_samesite' => 'Strict', 'cookie_lifetime' => $sessionTime, 'gc_maxlifetime' => $sessionTime]);
+        $_SESSION['password'] = $password;
+        session_write_close();
 	}
+} else {
+    // Read the session and immediately close it
+    session_start(['cookie_secure' => true, 'cookie_httponly' => true, 'cookie_samesite' => 'Strict', 'cookie_lifetime' => $sessionTime, 'gc_maxlifetime' => $sessionTime, 'read_and_close' => true]);
+
+    if(isset($_SESSION) && isset($_SESSION['password'])) {
+        $sessionPassword = true;
+        $password = $_SESSION['password'];
+    }
 }
 
 $db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
@@ -112,12 +134,36 @@ if($iscritti) {
 
 <html>
 	<head>
-		<title>Paradigm Shift by HTML5 UP</title>
+		<title>Torneo di Teeworlds</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<meta name="description" content="" />
 		<meta name="keywords" content="" />
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/alert.css" />
+
+        <!-- Override the last element in the history with a GET request to the webpage itself. -->
+        <!-- This is done to prevent form resubmissions if someone refreshes after signing up.  -->
+        <script>
+            if(window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        </script>
+
+        <!-- Configure MathJax -->
+        <script>
+            MathJax = {
+                options: {
+                    enableMenu: false
+                },
+                chtml: {
+                    scale: 1,
+                    minscale: 1,
+                    matchFontHeight: true,
+                    mtextInheritFount: true
+                }
+            }
+        </script>
 	</head>
 	<body class="is-preload">
 		<div id="wrapper">
@@ -146,7 +192,9 @@ if($iscritti) {
                     <p>Il torneo è un semplice death match vanilla con round fissi da dieci minuti.</p>
                     <p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
                     <br>
-                    <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula: ***FORMULA***</p>
+                    <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula:</p>
+                    <p>$$punteggio =  \frac{kill \cdot kill\ uniche}{(death + 1) \cdot giocatori} $$</p>
+                    <p>Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo e <b>giocatori</b> è il numero totale di giocatori iscritti.</p>
                     <p>Le regole sono semplici:</p>
                     <ul>
                         <li>Non fare account doppi</li>
@@ -155,171 +203,200 @@ if($iscritti) {
                     </ul>
                     <p>Il torneo si terrà il giorno Sabato 28 Novembre dalle 15:00 a oltranza</p>
                     <?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono attualmente <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
-                    <p><a class="button primary scrolly" id="registrati-goto-button" href="#registrati">Registrati!</a></p>
+                    <h2>Come entrare nel gioco</h2>
+                    <p>Una volta registrato, per entrare nel gioco basta scaricare Teeworlds 0.7.5 e cercare <b>Linux Day 2020</b> nella lista server, oppure inserire manualmente il dominio di questo sito.</p>
+                    <p>Appena ti connetterai il server ti chiederà una password: inserisci quella ottenuta mediante il processo di registrazione.</p>
+                    <p>Il nome giocatore nel server sarà quello inserito in fase di registrazione anche se nel tuo client Teeworlds hai impostato un nome diverso. Questo comportamento è intenzionale per garantire la congruenza della classifica.</p>
                 </div>
             </section>
+            <?php
+            if(file_exists('classifica.html')) {
+                $lastUpdate = filemtime('classifica.html');
+            } else {
+                $lastUpdate = 0;
+            }
+            // Old file
+            if($lastUpdate + CLASSIFICA_UPDATE_SECONDS < time() && !file_exists('update_in_progress.lock')) {
+                touch('update_in_progress.lock');
+                $lastUpdate = time();
+                // Update it
+                $db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
 
-            <!--
-			<section>
-				<header>
-					<h2>Classifica</h2>
-				</header>
-				<div class="content">
-                    <table class="table table-striped table-borderless">
-                        <thead class="thead-dark">
-                        <tr>
-                            <th scope="col">🏆</th>
-                            <th scope="col">Nome</th>
-                            <th scope="col">Kills (uniche)</th>
-                            <th scope="col">Deaths</th>
-                        </tr>
+                // TODO: WHERE ... with a timetstamp to filter different turns
+                $stmt = $db->prepare("
+                    SELECT k.name AS killer, d.name AS killed
+                    FROM kills
+                    JOIN players AS k ON killer = k.password
+                    JOIN players AS d ON killed = d.password
+                    ;");
+
+                $result = $stmt->execute();
+                if($result === false) {
+                    die("Error 3");
+                }
+
+                // TODO: can this cause a division by 0?
+                // Player => Points calculated according to (K/(D+1))*(unique_players_killed/total_players)
+                $players = [];
+
+                $killsCounter = [];
+                $deathsCounter = [];
+                $uniqueKills = [];
+
+                while(($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
+                    $k = $row['killer'];
+                    $d = $row['killed'];
+
+                    // Initialize values if we never encountered this player
+                    if(!isset($players[$k])) {
+                        $players[$k] = 0;
+                        $killsCounter[$k] = 0;
+                        $deathsCounter[$k] = 0;
+                        $uniqueKills[$k] = [];
+                    }
+                    if(!isset($players[$d])) {
+                        $players[$d] = 0;
+                        $killsCounter[$d] = 0;
+                        $deathsCounter[$d] = 0;
+                        $uniqueKills[$d] = [];
+                    }
+
+                    if($k === $d) {
+                        // Special case
+                        $deathsCounter[$d]++;
+                    } else {
+                        // +1 kill
+                        $killsCounter[$k]++;
+                        // +1 death
+                        $deathsCounter[$d]++;
+                        // Add to uniques
+                        if(!isset($uniqueKills[$k][$d])) {
+                            $uniqueKills[$k][$d] = 0;
+                        }
+                        // Can be counted if we want (how many times player X killed player Y)
+                        // $uniqueKills[$k][$d]++;
+                    }
+                }
+                
+                // Only create the file if the database is not empty
+                if(!empty($players)) {
+                    foreach($players as $player => &$points) {
+                        $points = ($killsCounter[$player] / ($deathsCounter[$player] + 1)) * (count($uniqueKills[$player]) / count($players));
+                    }
+
+                    arsort($players);
+
+                    $html = '';
+                    $i = 1;
+                    // It's sorted now
+                    foreach($players as $player => &$points) {
+                        $name = htmlspecialchars($player);
+                        $unique = count($uniqueKills[$player]);
+                        $html .= "
+                            <tr>
+                                <th>$i</th>
+                                <th>$player</th>
+                                <td>${killsCounter[$player]} ($unique)</td>
+                                <td>${deathsCounter[$player]}</td>
+                            </tr>";
+                        $i++;
+                    }
+
+                    file_put_contents('classifica.html', $html);
+                    $html = NULL;
+                }
+                else
+                {
+                    unlink('classifica.html');
+                }
+                
+                $db->close();
+                $db = NULL;
+
+                unlink('update_in_progress.lock');
+            }
+
+            if(file_exists('classifica.html')) {
+                $leaderboard = file_get_contents('classifica.html');
+                $updateString = date('Y-m-d H:i:s', $lastUpdate);
+                $section = "
+            <section>
+                <header>
+                    <h2>Classifica</h2>
+                </header>
+                <div class=\"content\">
+                    <table class=\"table table-striped table-borderless\">
+                        <thead class=\"thead-dark\">
+                            <tr>
+                                <th scope=\"col\">🏆</th>
+                                <th scope=\"col\">Nome</th>
+                                <th scope=\"col\">Kills (uniche)</th>
+                                <th scope=\"col\">Deaths</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        <?php
-                        if(file_exists('classifica.html')) {
-                            $lastUpdate = filemtime('classifica.html');
-                        } else {
-                            $lastUpdate = 0;
-                        }
-                        // Old file
-                        if($lastUpdate + CLASSIFICA_UPDATE_SECONDS < time() && !file_exists('update_in_progress.lock')) {
-                            touch('update_in_progress.lock');
-                            $lastUpdate = time();
-                            // Update it
-                            $db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
-
-                            // TODO: WHERE ... with a timetstamp to filter different turns
-                            $stmt = $db->prepare("
-                                SELECT k.name AS killer, d.name AS killed
-                                FROM kills
-                                JOIN players AS k ON killer = k.password
-                                JOIN players AS d ON killed = d.password
-                                ;");
-
-                            $result = $stmt->execute();
-                            if($result === false) {
-                                die("Error 3");
-                            }
-
-                            // TODO: can this cause a division by 0?
-                            // Player => Points calculated according to (K/(D+1))*(unique_players_killed/total_players)
-                            $players = [];
-
-                            $killsCounter = [];
-                            $deathsCounter = [];
-                            $uniqueKills = [];
-
-                            while(($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
-                                $k = $row['killer'];
-                                $d = $row['killed'];
-
-                                // Initialize values if we never encountered this player
-                                if(!isset($players[$k])) {
-                                    $players[$k] = 0;
-                                    $killsCounter[$k] = 0;
-                                    $deathsCounter[$k] = 0;
-                                    $uniqueKills[$k] = [];
-                                }
-                                if(!isset($players[$d])) {
-                                    $players[$d] = 0;
-                                    $killsCounter[$d] = 0;
-                                    $deathsCounter[$d] = 0;
-                                    $uniqueKills[$d] = [];
-                                }
-
-                                if($k === $d) {
-                                    // Special case
-                                    $deathsCounter[$d]++;
-                                } else {
-                                    // +1 kill
-                                    $killsCounter[$k]++;
-                                    // +1 death
-                                    $deathsCounter[$d]++;
-                                    // Add to uniques
-                                    if(!isset($uniqueKills[$k][$d])) {
-                                        $uniqueKills[$k][$d] = 0;
-                                    }
-                                    // Can be counted if we want (how many times player X killed player Y)
-                                    // $uniqueKills[$k][$d]++;
-                                }
-                            }
-                            foreach($players as $player => &$points) {
-                                $points = ($killsCounter[$player] / ($deathsCounter[$player] + 1)) * (count($uniqueKills[$player]) / count($players));
-                            }
-
-                            arsort($players);
-
-                            $html = '';
-                            $i = 1;
-                            // It's sorted now
-                            foreach($players as $player => &$points) {
-                                $name = htmlspecialchars($player);
-                                $unique = count($uniqueKills[$player]);
-                                $html .= "
-                                    <tr>
-                                        <th>$i</th>
-                                        <th>$player</th>
-                                        <td>${killsCounter[$player]} ($unique)</td>
-                                        <td>${deathsCounter[$player]}</td>
-                                    </tr>";
-                                $i++;
-                            }
-
-                            file_put_contents('classifica.html', $html);
-                            $html = NULL;
-
-                            $db->close();
-                            $db = NULL;
-
-                            unlink('update_in_progress.lock');
-                        }
-
-                        echo file_get_contents('classifica.html');
-                        ?>
+                            $leaderboard
                         </tbody>
                     </table>
 
-                    <small>Ultimo aggiornamento: <?= date('Y-m-d H:i:s', $lastUpdate) ?></small>
-				</div>
-			</section>
-            -->
+                    <small>Ultimo aggiornamento: $updateString</small>
+                </div>
+            </section>
+                ";
+                
+                echo $section;
+            }
+            ?>
 
 			<section id="registrati">
 				<header>
 					<h2>Registrati</h2>
 				</header>
 				<div class="content">
-                    <?php if($register && $registerError === NULL): ?>
+                    <?php if($sessionPassword || ($register && $registerError === NULL)): ?>
                         <h2>Registrazione completata</h2>
                         <p>Questa è la password <small>(case-insensitive)</small> che userai per entrare nel server:</p>
                         <div class="alert alert-primary password" role="alert">
                             <?= htmlspecialchars($password) ?>
                         </div>
-                        <p>Salvala, stampala, scrivila, prendi nota, <strong>non avrai modo di tornare a questa pagina</strong>!</p>
-                    <?php else: ?>
+                        <p>Se i cookie di questa pagina verranno  cancellati, perderai per sempre l'accesso alla tua password.<br><b>Pertanto invitiamo calorosamente gli utenti a prendere nota di questa password in un luogo in cui non verrà smarrita, in quanto l'accesso al server non è possibile senza di essa!</b></p>
+                    <?php elseif(REGISTRATIONS_ENABLED): ?>
                         <h2>Registrati</h2>
                         <?php if($registerError !== NULL): ?>
                             <div class="alert alert-danger" role="alert">
                                 <?= $registerError ?>
                             </div>
+                            <br>
                         <?php endif; ?>
-                        <form action="#" method="post">
+                        <form action="#registrati" method="post">
                             <div class="form-group">
                                 <label for="registratiFormNome">Nome nel gioco</label>
                                 <input name="nome" pattern="[a-zA-Z0-9\-_ .,;:!?]+" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" type="text" required="required" maxlength="15" class="form-control" id="registratiFormNome" aria-describedby="nomeHelp">
                                 <small id="nomeHelp" class="form-text text-muted">Il nome visualizzato nel gioco, massimo 15 caratteri. Sono ammessi caratteri alfanumerici, spazio, trattino, underscore e alcuni segni di punteggiatura: .,;:!?</small>
                             </div>
+                            <br>
                             <div class="form-group">
                                 <label for="registratiFormEmail">Indirizzo email</label>
                                 <input name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" type="email" required="required" class="form-control" id="registratiFormEmail" aria-describedby="emailHelp">
                                 <small id="emailHelp" class="form-text text-muted">Viene utilizzato solo per contattare i vincitori!</small>
                             </div>
+                            <br>
                             <div class="form-group form-check">
                                 <input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
-                                <label class="form-check-label" for="registratiFormCheck1">Ho letto e accetto le condizioni generali e particolari e le cose della privacy e prometto di non barare.</label>
+                                <label class="form-check-label" for="registratiFormCheck1">Ho letto <a class="scrolly" href="#first">quanto sopra riportato</a> e prometto di non barare.</label>
                             </div>
                             <button type="submit" class="btn btn-primary">Invia</button>
                         </form>
+                    <?php else: ?>
+                        <h2>Registrati</h2>
+                        <?php
+                            if($registerError === NULL)
+                            {
+                                echo "<div class=\"alert alert-info\" role=\"alert\">Le registrazioni sono chiuse.</div>";
+                            } else {
+                                echo "<div class=\"alert alert-danger\" role=\"alert\">$registerError</div>";
+                            }
+                        ?>
                     <?php endif; ?>
 				</div>
 			</section>
@@ -332,6 +409,7 @@ if($iscritti) {
 		<script src="assets/js/browser.min.js"></script>
 		<script src="assets/js/breakpoints.min.js"></script>
 		<script src="assets/js/util.js"></script>
-		<script src="assets/js/main.js"></script>
+        <script src="assets/js/main.js"></script>
+        <script src="assets/js/mathjax/tex-svg.js" async></script>
 	</body>
 </html>
