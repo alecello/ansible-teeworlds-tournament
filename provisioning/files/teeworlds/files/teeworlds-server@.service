@@ -3,8 +3,6 @@ Description=Teeworlds server
 
 # Assert required files are presente
 AssertPathExists=/opt/teeworlds/server
-AssertPathExists=/opt/teeworlds/storage.cfg
-AssertPathExists=/opt/teeworlds/data/autoexec.cfg
 AssertFileIsExecutable=/opt/teeworlds/server
 
 # Create dependency network

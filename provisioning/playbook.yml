@@ -10,15 +10,15 @@
     dh_param_path: "/etc/nginx/dhparam-2048.pem"
 
     # Tournament start (in timezone used by cron - by default UTC)
-    tournament_hour: "14"
-    tournament_minute: "50"
+    tournament_hour: "15"
+    tournament_minute: "15"
     tournament_day: "15"
     tournament_month: "11"
 
     # Registration end (in timezone used by cron - by default UTC)
-    registration_end_hour: "13"
-    registration_end_minute: "00"
-    registration_end_day: "28"
+    registration_end_hour: "15"
+    registration_end_minute: "10"
+    registration_end_day: "15"
     registration_end_month: "11"
 
     # Teeworlds files
@@ -490,7 +490,7 @@
     - name: Stop the teeworlds service
       tags: [ teeworlds ]
       service:
-        name: "teeworlds-server"
+        name: "teeworlds-server@warmup"
         state: "stopped"
 
 
