@@ -16,14 +16,13 @@ clean:
 	rm -rf provisioning/files/phpmailer
 	rm -rf provisioning/files/teeworlds/teeworlds
 
-vm:
-	# Create the VM
+roles:
 	# Download ansible roles
 	ansible-galaxy install --roles-path provisioning/roles geerlingguy.php
 	ansible-galaxy install --roles-path provisioning/roles geerlingguy.nginx
 	ansible-galaxy install --roles-path provisioning/roles geerlingguy.certbot
 
-	# Spin up the machine
+vm: roles
 	vagrant up
 
 provision:
@@ -68,7 +67,7 @@ db:
 	# Run the content provisioner for database
 	vagrant provision --provision-with db
 
-deploy-full:
+deploy-full: roles
 	ansible-playbook -i provisioning/hosts provisioning/playbook.yml
 
 deploy-site:
