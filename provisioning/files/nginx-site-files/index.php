@@ -224,6 +224,10 @@ if($iscritti) {
                     <p>Una volta registrato, per entrare nel gioco basta scaricare Teeworlds 0.7.5 (già pacchettizzato per tutte le principali distribuzioni, oppure <a href="https://www.teeworlds.com/?page=downloads&id=14786">scaricabile da questa pagina</a>) e cercare <b>Linux Day 2020</b> nella lista server, oppure effettuare l'accesso diretto inserendo il dominio <b><?= $_SERVER['HTTP_HOST'] ?></b> nell'apposito box.</p>
                     <p>Appena ti connetterai il server ti chiederà una password: inserisci quella ottenuta mediante il processo di registrazione.</p>
                     <p>Il nome giocatore nel server sarà quello inserito in fase di registrazione anche se nel tuo client Teeworlds hai impostato un nome diverso. Questo comportamento è intenzionale per garantire la congruenza della classifica.</p>
+
+                    <h2>Riscaldamento e spettatori</h2>
+                    <p>I giocatori potranno connettersi al server fino ad un'ora prima del torneo per prepararsi all'evento e riscaldarsi in una fase iniziale di gioco libero senza punteggi o classifica. L'accesso è libero a tutti e non richiede alcuna password.</p>
+                    <p>Durante il torneo fino ad un massimo di 14 giocatori possono unirsi come spettatori usando la speciale password <b>spectator</b>. Gli spettatori non possono unirsi alla partita, mandare messaggi ai giocatori o vedere il loro livello di salute e armatura.</p>
                 </div>
             </section>
             <?php
