@@ -16,6 +16,13 @@ include 'config.php';
 // Not a form submission
 $register = false;
 
+// Password not retrievered from session
+$sessionPassword = false;
+
+// Lifetime of session
+// 14 days is enough to survive the tournament without refreshes
+$sessionTime = 60 * 60 * 24 * 14;
+
 // If this is a form submission
 if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_POST['checkbox1'])) {
 	$register = true;
@@ -95,8 +102,21 @@ if(isset($_POST) && isset($_POST['nome']) && isset($_POST['email']) && isset($_P
 
 		// Release the lock
 		$db->close();
-		$db = NULL;
+        $db = NULL;
+
+        // Store password in session
+        session_start(['cookie_secure' => true, 'cookie_httponly' => true, 'cookie_samesite' => 'Strict', 'cookie_lifetime' => $sessionTime, 'gc_maxlifetime' => $sessionTime]);
+        $_SESSION['password'] = $password;
+        session_write_close();
 	}
+} else {
+    // Read the session and immediately close it
+    session_start(['cookie_secure' => true, 'cookie_httponly' => true, 'cookie_samesite' => 'Strict', 'cookie_lifetime' => $sessionTime, 'gc_maxlifetime' => $sessionTime, 'read_and_close' => true]);
+
+    if(isset($_SESSION) && isset($_SESSION['password'])) {
+        $sessionPassword = true;
+        $password = $_SESSION['password'];
+    }
 }
 
 $db = new SQLite3(DATABASE_PATH, SQLITE3_OPEN_READONLY);
@@ -114,7 +134,7 @@ if($iscritti) {
 
 <html>
 	<head>
-		<title>Paradigm Shift by HTML5 UP</title>
+		<title>Torneo di Teeworlds</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<meta name="description" content="" />
@@ -183,6 +203,10 @@ if($iscritti) {
                     </ul>
                     <p>Il torneo si terrà il giorno Sabato 28 Novembre dalle 15:00 a oltranza</p>
                     <?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono attualmente <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
+                    <h2>Come entrare nel gioco</h2>
+                    <p>Una volta registrato, per entrare nel gioco basta scaricare Teeworlds 0.7.5 e cercare <b>Linux Day 2020</b> nella lista server, oppure inserire manualmente il dominio di questo sito.</p>
+                    <p>Appena ti connetterai il server ti chiederà una password: inserisci quella ottenuta mediante il processo di registrazione.</p>
+                    <p>Il nome giocatore nel server sarà quello inserito in fase di registrazione anche se nel tuo client Teeworlds hai impostato un nome diverso. Questo comportamento è intenzionale per garantire la congruenza della classifica.</p>
                 </div>
             </section>
             <?php
@@ -329,13 +353,13 @@ if($iscritti) {
 					<h2>Registrati</h2>
 				</header>
 				<div class="content">
-                    <?php if($register && $registerError === NULL): ?>
+                    <?php if($sessionPassword || ($register && $registerError === NULL)): ?>
                         <h2>Registrazione completata</h2>
                         <p>Questa è la password <small>(case-insensitive)</small> che userai per entrare nel server:</p>
                         <div class="alert alert-primary password" role="alert">
                             <?= htmlspecialchars($password) ?>
                         </div>
-                        <p>Salvala, stampala, scrivila, prendi nota, <strong>non avrai modo di tornare a questa pagina</strong>!</p>
+                        <p>Se i cookie di questa pagina verranno  cancellati, perderai per sempre l'accesso alla tua password.<br><b>Pertanto invitiamo calorosamente gli utenti a prendere nota di questa password in un luogo in cui non verrà smarrita, in quanto l'accesso al server non è possibile senza di essa!</b></p>
                     <?php elseif(REGISTRATIONS_ENABLED): ?>
                         <h2>Registrati</h2>
                         <?php if($registerError !== NULL): ?>
@@ -359,7 +383,7 @@ if($iscritti) {
                             <br>
                             <div class="form-group form-check">
                                 <input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
-                                <label class="form-check-label" for="registratiFormCheck1">Ho letto <a href="#first">quanto sopra riportato</a> e prometto di non barare.</label>
+                                <label class="form-check-label" for="registratiFormCheck1">Ho letto <a class="scrolly" href="#first">quanto sopra riportato</a> e prometto di non barare.</label>
                             </div>
                             <button type="submit" class="btn btn-primary">Invia</button>
                         </form>
