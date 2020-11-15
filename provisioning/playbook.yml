@@ -11,8 +11,8 @@
 
     # Tournament start (in timezone used by cron - by default UTC)
     tournament_hour: "14"
-    tournament_minute: "00"
-    tournament_day: "28"
+    tournament_minute: "50"
+    tournament_day: "15"
     tournament_month: "11"
 
     # Registration end (in timezone used by cron - by default UTC)
