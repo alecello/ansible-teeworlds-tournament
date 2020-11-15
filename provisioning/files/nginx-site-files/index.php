@@ -158,9 +158,36 @@ if($iscritti) {
                     <p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
                     <br>
                     <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula:</p>
-                    <br>
-                    <p><b>(kills / (deaths + 1)) * (kill uniche / kills)</b></p>
-                    <br>
+                    <math xmlns='http://www.w3.org/1998/Math/MathML' display='block' style='margin: 0 0 2rem 0;'>
+                        <mfrac>
+                            <mrow>
+                                <mi>kills</mi>
+                                <mo>&#8290;</mo>
+                                <mrow>
+                                    <mo>(</mo>
+                                    <mrow>
+                                        <mi>kill</mi>
+                                        <mo>&#8290;</mo>
+                                        <mi>uniche</mi>
+                                    </mrow>
+                                    <mo>)</mo>
+                                </mrow>
+                            </mrow>
+                            <mrow>
+                                <mrow>
+                                    <mo>(</mo>
+                                    <mrow>
+                                        <mi>deaths</mi>
+                                        <mo>+</mo>
+                                        <mn>1</mn>
+                                    </mrow>
+                                    <mo>)</mo>
+                                </mrow>
+                                <mo>&#8290;</mo>
+                                <mi>kills</mi>
+                            </mrow>
+                        </mfrac>
+                    </math>
                     <p>Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo.</p>
                     <p>Le regole sono semplici:</p>
                     <ul>
@@ -373,6 +400,8 @@ if($iscritti) {
 		<script src="assets/js/browser.min.js"></script>
 		<script src="assets/js/breakpoints.min.js"></script>
 		<script src="assets/js/util.js"></script>
-		<script src="assets/js/main.js"></script>
+        <script src="assets/js/main.js"></script>
+        
+        <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 	</body>
 </html>
