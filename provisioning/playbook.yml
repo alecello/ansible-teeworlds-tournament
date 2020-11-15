@@ -644,6 +644,13 @@
         state: "started"
 
 
+    - name: Start the server service
+      tags: [ teeworlds ]
+      service:
+        name: "teeworlds-server"
+        state: "started"
+
+
     - name: Set cron job to stop registrations
       tags: [ site, db ]
       cron:
