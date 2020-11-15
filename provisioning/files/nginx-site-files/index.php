@@ -183,7 +183,6 @@ if($iscritti) {
                     </ul>
                     <p>Il torneo si terrà il giorno Sabato 28 Novembre dalle 15:00 a oltranza</p>
                     <?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono attualmente <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
-                    <p><a class="button primary scrolly" id="registrati-goto-button" href="#registrati">Registrati!</a></p>
                 </div>
             </section>
             <?php
