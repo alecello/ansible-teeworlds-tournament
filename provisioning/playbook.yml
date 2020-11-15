@@ -464,8 +464,8 @@
     - name: Install Teeworlds server service
       tags: [ teeworlds ]
       copy:
-        src: "files/teeworlds/files/teeworlds-server.service"
-        dest: "/etc/systemd/system/teeworlds-server.service"
+        src: "files/teeworlds/files/teeworlds-server@.service"
+        dest: "/etc/systemd/system/teeworlds-server@.service"
         owner: "root"
         group: "root"
         mode: 0644
