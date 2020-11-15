@@ -129,6 +129,21 @@ if($iscritti) {
                 window.history.replaceState(null, null, window.location.href);
             }
         </script>
+
+        <!-- Configure MathJax -->
+        <script>
+            MathJax = {
+                options: {
+                    enableMenu: false
+                },
+                chtml: {
+                    scale: 1,
+                    minscale: 1,
+                    matchFontHeight: true,
+                    mtextInheritFount: true
+                }
+            }
+        </script>
 	</head>
 	<body class="is-preload">
 		<div id="wrapper">
@@ -158,37 +173,8 @@ if($iscritti) {
                     <p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
                     <br>
                     <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula:</p>
-                    <math xmlns='http://www.w3.org/1998/Math/MathML' display='block' style='margin: 0 0 2rem 0;'>
-                        <mfrac>
-                            <mrow>
-                                <mi>kills</mi>
-                                <mo>&#8290;</mo>
-                                <mrow>
-                                    <mo>(</mo>
-                                    <mrow>
-                                        <mi>kill</mi>
-                                        <mo>&#8290;</mo>
-                                        <mi>uniche</mi>
-                                    </mrow>
-                                    <mo>)</mo>
-                                </mrow>
-                            </mrow>
-                            <mrow>
-                                <mrow>
-                                    <mo>(</mo>
-                                    <mrow>
-                                        <mi>deaths</mi>
-                                        <mo>+</mo>
-                                        <mn>1</mn>
-                                    </mrow>
-                                    <mo>)</mo>
-                                </mrow>
-                                <mo>&#8290;</mo>
-                                <mi>kills</mi>
-                            </mrow>
-                        </mfrac>
-                    </math>
-                    <p>Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo.</p>
+                    <p>$$punteggio =  \frac{kill \cdot kill\ uniche}{(death + 1) \cdot giocatori} $$</p>
+                    <p>Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo e <b>giocatori</b> è il numero totale di giocatori iscritti.</p>
                     <p>Le regole sono semplici:</p>
                     <ul>
                         <li>Non fare account doppi</li>
@@ -401,7 +387,6 @@ if($iscritti) {
 		<script src="assets/js/breakpoints.min.js"></script>
 		<script src="assets/js/util.js"></script>
         <script src="assets/js/main.js"></script>
-        
-        <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="assets/js/mathjax/tex-svg.js" async></script>
 	</body>
 </html>
