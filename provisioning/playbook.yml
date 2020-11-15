@@ -551,11 +551,21 @@
         mode: 0555
 
 
-    - name: Copy teeworlds configuration to remote host
+    - name: Copy teeworlds tournament configuration to remote host
       tags: [ teeworlds ]
       copy:
-        src: "files/teeworlds/files/autoexec.cfg"
-        dest: "/opt/teeworlds/data/autoexec.cfg"
+        src: "files/teeworlds/files/autoexec-tournament.cfg"
+        dest: "/opt/teeworlds/autoexec-tournament.cfg"
+        owner: "teeworlds"
+        group: "teeworlds"
+        mode: 0400
+
+
+    - name: Copy teeworlds warmup configuration to remote host
+      tags: [ teeworlds ]
+      copy:
+        src: "files/teeworlds/files/autoexec-warmup.cfg"
+        dest: "/opt/teeworlds/autoexec-warmup.cfg"
         owner: "teeworlds"
         group: "teeworlds"
         mode: 0400
@@ -647,7 +657,7 @@
     - name: Start the server service
       tags: [ teeworlds ]
       service:
-        name: "teeworlds-server"
+        name: "teeworlds-server@warmup"
         state: "started"
 
 
@@ -661,7 +671,7 @@
         day: "{{ registration_end_day }}"
         month: "{{ registration_end_month }}"
 
-        job: "cp {{ root_dir }}/config.php {{ root_dir }}/config.bak; sed 's/\"REGISTRATIONS_ENABLED\", true/\"REGISTRATIONS_ENABLED\", false/g' {{ root_dir }}/config.bak > {{ root_dir }}/config.php"
+        job: "systemctl stop teeworlds-server@warmup.service; cp {{ root_dir }}/config.php {{ root_dir }}/config.bak; sed 's/\"REGISTRATIONS_ENABLED\", true/\"REGISTRATIONS_ENABLED\", false/g' {{ root_dir }}/config.bak > {{ root_dir }}/config.php"
         user: "root"
 
 
@@ -675,5 +685,5 @@
         day: "{{ tournament_day }}"
         month: "{{ tournament_month }}"
 
-        job: "sudo -u teeworlds {{ dump_script }} {{ database_file }} {{ credentials_file }}; systemctl start teeworlds-server.service"
+        job: "sudo -u teeworlds {{ dump_script }} {{ database_file }} {{ credentials_file }}; systemctl start teeworlds-server@tournament.service"
         user: "root"

@@ -14,7 +14,7 @@ Requires=teeworlds-db.service
 
 [Service]
 Type=exec
-ExecStart=/opt/teeworlds/server
+ExecStart=/opt/teeworlds/server -f autoexec-%i.cfg
 
 # Run as teeworlds:teeworlds, prevent privilege escalation
 User=teeworlds
