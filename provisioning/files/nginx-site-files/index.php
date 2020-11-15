@@ -221,7 +221,7 @@ if($iscritti) {
                     <img src="/images/maglietta.svg" class="image fit">
 
                     <h2>Come entrare nel gioco</h2>
-                    <p>Una volta registrato, per entrare nel gioco basta scaricare Teeworlds 0.7.5 (già pacchettizzato per tutte le principali distribuzioni, oppure <a href="https://www.teeworlds.com/?page=downloads&id=14786">scaricabile da questa pagina</a>) e cercare <b>Linux Day 2020</b> nella lista server, oppure inserire manualmente il dominio di questo sito (tw.merge-it.net).</p>
+                    <p>Una volta registrato, per entrare nel gioco basta scaricare Teeworlds 0.7.5 (già pacchettizzato per tutte le principali distribuzioni, oppure <a href="https://www.teeworlds.com/?page=downloads&id=14786">scaricabile da questa pagina</a>) e cercare <b>Linux Day 2020</b> nella lista server, oppure effettuare l'accesso diretto inserendo il dominio <b><?= $_SERVER['HTTP_HOST'] ?></b> nell'apposito box.</p>
                     <p>Appena ti connetterai il server ti chiederà una password: inserisci quella ottenuta mediante il processo di registrazione.</p>
                     <p>Il nome giocatore nel server sarà quello inserito in fase di registrazione anche se nel tuo client Teeworlds hai impostato un nome diverso. Questo comportamento è intenzionale per garantire la congruenza della classifica.</p>
                 </div>
