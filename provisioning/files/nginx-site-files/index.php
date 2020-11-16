@@ -423,6 +423,7 @@ if($iscritti) {
 			</section>
 
 			<div class="copyright">Powered by <a href="https://www.ils.org/">Italian Linux Society</a>. Design: <a href="https://html5up.net">HTML5 UP</a>.</div>
+			<div class="copyright">Tutti i componenti software del torneo sono open source. Il <a href="https://github.com/alecello/ansible-teeworlds-tournament">playbook Ansible</a> e il <a href="https://github.com/alecello/teeworlds/tree/tournament">server Teeworlds modificato</a> sono disponibili liberamente su GitHub.</div>
 		</div>
 
 		<script src="assets/js/jquery.min.js"></script>
