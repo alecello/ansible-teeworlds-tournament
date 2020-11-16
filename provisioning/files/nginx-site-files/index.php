@@ -191,11 +191,11 @@ if($iscritti) {
                         La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!
                     </p>
                     <p>
-                        Il torneo si terrà il giorno <b>Sabato 28 Novembre dalle 15:00</b> a oltranza, ed è articolato come un semplice death match vanilla con round fissi da dieci minuti.<br><br>
+                        Il torneo si terrà il giorno <b>Sabato 28 Novembre dalle 15:00</b> fino ad un orario di conclusione ancora da stabilire, ed è articolato come un semplice death match vanilla con round fissi da dieci minuti.<br><b>Prima ti connetterai, prima potrai iniziare ad accumulare punti per scalare la classifica!</b><br><br>
                         <a href="#registrati" class="button primary large scrolly"><span class="label">Registrati ora!</span></a>
                     </p>
                     <p>
-                        Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula:<br>
+                        Il vincitore viene proclamato in base a un punteggio calcolato nel corso dell'intera sessione secondo la seguente formula:<br>
                         <span>$$punteggio =  \frac{kill \cdot kill\ uniche}{(death + 1) \cdot giocatori} $$</span><br>
                         Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo e <b>giocatori</b> è il numero totale di giocatori iscritti.<br>
                     </p>
