@@ -186,27 +186,48 @@ if($iscritti) {
 				</header>
 				<div class="content">
                     <h2>Il torneo</h2>
-                    <p>Benvenuto nel torneo, prode guerriero!</p>
-                    <p>La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!</p>
-                    <br>
-                    <p>Il torneo è un semplice death match vanilla con round fissi da dieci minuti.</p>
-                    <p>Registrarsi è semplice: premi il bottone qui in basso e inserisci lo username che intendi usare nel gioco e una email.</p>
-                    <br>
-                    <p>Il vincitore viene proclamato in base a un punteggio calcolato secondo la seguente formula:</p>
-                    <p>$$punteggio =  \frac{kill \cdot kill\ uniche}{(death + 1) \cdot giocatori} $$</p>
-                    <p>Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo e <b>giocatori</b> è il numero totale di giocatori iscritti.</p>
+                    <p>
+                        Benvenuto nel torneo <a href="https://www.teeworlds.com/">Teeworlds</a>, prode guerriero!<br>
+                        La tua missione, se la vorrai accettare, sarà quella di scalare la vetta della gloria della galassia Tee diventando il fragger più spietato che si sia mai visto!
+                    </p>
+                    <p>
+                        Il torneo si terrà il giorno <b>Sabato 28 Novembre dalle 15:00</b> fino ad un orario di conclusione ancora da stabilire, ed è articolato come un semplice death match vanilla con round fissi da dieci minuti.<br><b>Prima ti connetterai, prima potrai iniziare ad accumulare punti per scalare la classifica!</b><br><br>
+                        <a href="#registrati" class="button primary large scrolly"><span class="label">Registrati ora!</span></a>
+                    </p>
+                    <p>
+                        Il vincitore viene proclamato in base a un punteggio calcolato nel corso dell'intera sessione secondo la seguente formula:<br>
+                        <span>$$punteggio =  \frac{kill \cdot kill\ uniche}{(death + 1) \cdot giocatori} $$</span><br>
+                        Dove <b>kill uniche</b> è il numero di giocatori distinti uccisi durante il torneo e <b>giocatori</b> è il numero totale di giocatori iscritti.<br>
+                    </p>
+
                     <p>Le regole sono semplici:</p>
                     <ul>
                         <li>Non fare account doppi</li>
                         <li>Non entrare con più di un profilo contemporaneamente</li>
                         <li>Non fare niente che possa rovinare il gioco ad altri giocatori</li>
                     </ul>
-                    <p>Il torneo si terrà il giorno Sabato 28 Novembre dalle 15:00 a oltranza</p>
+
                     <?php if($iscritti !== NULL && $iscritti >= 5): ?><p>Ci sono attualmente <?= $iscritti ?> giocatori iscritti al torneo!</p><?php endif; ?>
+
+                    <h2>Premi</h2>
+                    <p>
+                        L'importante è partecipare, ma anche qualche premio non guasta...
+                    </p>
+                    <ul>
+                        <li>1° classificato: una maglietta Linux.it e la quota per un anno all'associazione <a href="http://www.ils.org/">Italian Linux Society</a> (se non sei ancora socio potrai procedere successivamente all'<a href="http://www.ils.org/iscrizione">iscrizione</a>)</li>
+                        <li>2° classificato: una maglietta Linux.it</li>
+                        <li>3° classificato: <a href="https://www.linux.it/stickers">una busta di stickers</a> extra large (100 + 100 adesivi)</li>
+                    </ul>
+                    <img src="/images/maglietta.svg" class="image fit">
+
                     <h2>Come entrare nel gioco</h2>
-                    <p>Una volta registrato, per entrare nel gioco basta scaricare Teeworlds 0.7.5 e cercare <b>Linux Day 2020</b> nella lista server, oppure inserire manualmente il dominio di questo sito.</p>
+                    <p>Una volta registrato, per entrare nel gioco basta scaricare Teeworlds 0.7.5 (già pacchettizzato per tutte le principali distribuzioni, oppure <a href="https://www.teeworlds.com/?page=downloads&id=14786">scaricabile da questa pagina</a>) e cercare <b>Linux Day 2020</b> nella lista server, oppure effettuare l'accesso diretto inserendo il dominio <b><?= $_SERVER['HTTP_HOST'] ?></b> nell'apposito box.</p>
                     <p>Appena ti connetterai il server ti chiederà una password: inserisci quella ottenuta mediante il processo di registrazione.</p>
                     <p>Il nome giocatore nel server sarà quello inserito in fase di registrazione anche se nel tuo client Teeworlds hai impostato un nome diverso. Questo comportamento è intenzionale per garantire la congruenza della classifica.</p>
+
+                    <h2>Riscaldamento e spettatori</h2>
+                    <p>I giocatori potranno connettersi al server fino ad un'ora prima del torneo per prepararsi all'evento e riscaldarsi in una fase iniziale di gioco libero senza punteggi o classifica. L'accesso è libero a tutti e non richiede alcuna password.</p>
+                    <p>Durante il torneo fino ad un massimo di 14 giocatori possono unirsi come spettatori usando la speciale password <b>spectator</b>. Gli spettatori non possono unirsi alla partita, mandare messaggi ai giocatori o vedere il loro livello di salute e armatura.</p>
                 </div>
             </section>
             <?php
@@ -277,7 +298,7 @@ if($iscritti) {
                         // $uniqueKills[$k][$d]++;
                     }
                 }
-                
+
                 // Only create the file if the database is not empty
                 if(!empty($players)) {
                     foreach($players as $player => &$points) {
@@ -309,7 +330,7 @@ if($iscritti) {
                 {
                     unlink('classifica.html');
                 }
-                
+
                 $db->close();
                 $db = NULL;
 
@@ -343,7 +364,7 @@ if($iscritti) {
                 </div>
             </section>
                 ";
-                
+
                 echo $section;
             }
             ?>
@@ -383,7 +404,7 @@ if($iscritti) {
                             <br>
                             <div class="form-group form-check">
                                 <input name="checkbox1" value="on" type="checkbox" required="required" class="form-check-input" id="registratiFormCheck1">
-                                <label class="form-check-label" for="registratiFormCheck1">Ho letto <a class="scrolly" href="#first">quanto sopra riportato</a> e prometto di non barare.</label>
+                                <label class="form-check-label" for="registratiFormCheck1">Ho letto ed accetto <a href="http://www.ils.org/privacy" target="_blank">la privacy policy</a>.</label>
                             </div>
                             <button type="submit" class="btn btn-primary">Invia</button>
                         </form>
@@ -402,6 +423,7 @@ if($iscritti) {
 			</section>
 
 			<div class="copyright">Powered by <a href="https://www.ils.org/">Italian Linux Society</a>. Design: <a href="https://html5up.net">HTML5 UP</a>.</div>
+			<div class="copyright">Tutti i componenti software del torneo sono open source. Il <a href="https://github.com/alecello/ansible-teeworlds-tournament">playbook Ansible</a> e il <a href="https://github.com/alecello/teeworlds/tree/tournament">server Teeworlds modificato</a> sono disponibili liberamente su GitHub.</div>
 		</div>
 
 		<script src="assets/js/jquery.min.js"></script>
