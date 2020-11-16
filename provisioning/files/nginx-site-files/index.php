@@ -142,6 +142,22 @@ if($iscritti) {
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link rel="stylesheet" href="assets/css/alert.css" />
 
+        <meta name="twitter:title" content="Torneo Teeworlds" />
+        <meta name="twitter:creator" content="@ItaLinuxSociety" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://tw.merge-it.net/" />
+        <meta name="twitter:image" content="https://tw.merge-it.net/images/social.png" />
+
+        <meta property="og:site_name" content="Torneo Teeworlds" />
+        <meta property="og:title" content="Torneo Teeworlds" />
+        <meta property="og:url" content="https://tw.merge-it.net/" />
+        <meta property="og:image" content="https://tw.merge-it.net/images/social.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:country-name" content="Italy" />
+        <meta property="og:email" content="webmaster@linux.it" />
+        <meta property="og:locale" content="it_IT" />
+        <meta property="og:description" content="Sabato 28 novembre" />
+
         <!-- Override the last element in the history with a GET request to the webpage itself. -->
         <!-- This is done to prevent form resubmissions if someone refreshes after signing up.  -->
         <script>
